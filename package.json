@@ -4,14 +4,16 @@
   "description": "",
   "main": "handler.js",
   "author": "",
-  "license": "",
+  "license": "Apache-2.0",
   "dependencies": {
     "@slack/client": "^3.7.0",
     "aws-sdk": "^2.7.13",
-    "axios": "^0.17.1"
+    "axios": "^0.17.1",
+    "require-dir": "^0.3.2"
   },
   "devDependencies": {
+    "cheerio": "^0.22.0",
+    "jasmine": "^2.5.2",
     "serverless-offline": "^3.16.0"
   }
 }
-3
