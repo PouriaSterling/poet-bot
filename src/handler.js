@@ -1,13 +1,17 @@
 const https = require('https');
+const requireDir = require('require-dir');
+
+const AWS = require("aws-sdk");
+const lambda = new AWS.Lambda({
+  region: "ap-southeast-2"
+});
+
 const OAuth = require('./oauth.js');
 const Templates = require('./templates.js');
 const SlackClient = require('./slackClient.js');
 const Luis = require('./luis.js');
-const IssueDescription = require('./jiraCalls/IssueDescription.js');
-const IssueAssignee = require('./jiraCalls/IssueAssignee.js');
-const IssueStatus = require('./jiraCalls/IssueStatus.js');
-const AssigneeIssues = require('./jiraCalls/AssigneeIssues.js');
-const IssuesForStatus = require('./jiraCalls/IssuesForStatus.js');
+
+const jiraCalls = requireDir('./jiraCalls');
 
 const client = {
 	id: process.env.CLIENT_ID,
@@ -46,12 +50,26 @@ module.exports.authorized = (event, context, callback) => {
 	});
 };
 
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
+
 module.exports.event = (event, context, callback) => {
-//    console.log("type: " + event.body);
 	const jsonBody = JSON.parse(event.body);
-	const response = {
-		statusCode: 200
-	};
+//	const jsonHeaders = JSON.parse(event);
+    console.log("Text: " + jsonBody.event.text);
+    console.log(event);
+    // X-Slack-Retry-Reason
+
+//    sleep(3000);
+	const response_success = {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: 'ok'
+          }),
+    };
+    callback(null, response_success);
+
 
 	switch (jsonBody.type) {
 		case 'url_verification':
@@ -68,22 +86,42 @@ module.exports.event = (event, context, callback) => {
 //            handleEvent(jsonBody.event, "1234");
 			break;
 	}
-
-	callback(null, response);
 };
 
 const handleEvent = (event, token) => {
 	console.log("Handler");
-
 	switch (event.type) {
 		case 'message':
 			// ignore ourselves
-			if (!(event.subtype && event.subtype === 'bot_message')) {
+			if (!event.subtype || event.subtype !== 'bot_message') {
+                SlackClient.send(event, ">" + event.text, token);
+
+//                lambda.invoke({
+//                    FunctionName: 'name_of_your_lambda_function',
+//                    Payload: JSON.stringify(event, null, 2) // pass params
+//                    }, function(error, data) {
+//                        if (error) {
+//                            context.done('error', error);
+//                        }
+//                        if(data.Payload){
+//                            context.succeed(data.Payload)
+//                        }
+//                    });
+
 				// call Luis
-                Luis.process(event.text)
-                    .then((intent) => handleIntent(intent, event, token))
-                    .catch(error => console.log("HandErr: " + error));
-//                SlackClient.send(event, "Nothing!!!", token);
+//                Luis.process(event.text)
+//                    .then((intent) => handleIntent(intent, event, token))
+//                    .catch(error => console.log("HandErr: " + error));
+
+//                const sample = {
+//                                 "query": "hello?",
+//                                 "topScoringIntent": {
+//                                   "intent": "None",
+//                                   "score": 0.271888375
+//                                 },
+//                                 "entities": []
+//                               };
+//                handleIntent(sample, event, token);
 			}
 			break;
 	}
@@ -97,40 +135,22 @@ const handleIntent = (response, event, token) => {
     var intent = response.topScoringIntent.intent;
     var entity = "err";
 
-//    console.log("Intent: " + intent);
-//    console.log("length: " + response.entities.length);
     // check that an entity was found by Luis
     if (response.entities.length == 0){
         console.log("Error: entity not found");
-        intent = 'None';
+        intent = 'NotDefined';
     } else {
         entity = response.entities[0].entity;
     }
 
-    switch (intent) {
-        case 'IssueDescription':
-            console.log("switch issueDesc");
-            IssueDescription.process(event, token, entity);
-            break;
-        case 'IssueAssignee':
-            IssueAssignee.process(event, token, entity);
-            break;
-        case 'IssueStatus':
-            IssueStatus.process(event, token, entity);
-            break;
-        case 'AssigneeIssues':
-            AssigneeIssues.process(event, token, entity);
-            break;
-        case 'IssuesForStatus':
-            IssuesForStatus.process(event, token, entity);
-            break;
-        case 'None':
-            SlackClient.send(event, "Error: Your intention could not be found.", token);
-            break;
-        default:
-            SlackClient.send(event, "Error: Feature not implemented yet.", token);
-            break;
+    // hand off execution to intended JIRA handler
+    if (intent in jiraCalls){
+        jiraCalls[intent].process(event, token, entity);
+    }else{
+        SlackClient.send(event, "Error: Feature not implemented yet.", token);
     }
-
-//    SlackClient.send(event, "Nothing!!!", token);
 };
+
+module.exports.receptionist = (event, context, callback) => {
+    console.log("~~~Working!!");
+}

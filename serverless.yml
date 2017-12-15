@@ -25,7 +25,10 @@ provider:
       Action:
         - dynamodb:GetItem
         - dynamodb:PutItem
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:*
+        - lambda:InvokeFunction
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:*:*
+        - "*"
 
 functions:
   install:
@@ -40,6 +43,8 @@ functions:
     handler: src/handler.event
     events:
       - http: POST event
+  receptionist:
+    handler: src/handler.receptionist
 
 resources:
   Resources:
