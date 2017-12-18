@@ -9,7 +9,6 @@ const luisDetails = {
 };
 
 module.exports.process = (question) => {
-    console.log("Luis");
     return axios.get(luisDetails.url, {
         params: {
             timeZoneOffset: luisDetails.timeZoneOffset,
@@ -18,7 +17,6 @@ module.exports.process = (question) => {
         }
     })
     .then(function (response) {
-        console.log("/Luis");
         return response.data;
     })
 };

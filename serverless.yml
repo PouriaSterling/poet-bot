@@ -39,12 +39,12 @@ functions:
     handler: src/handler.authorized
     events:
       - http: GET authorized
-  event:
-    handler: src/handler.event
-    events:
-      - http: POST event
   receptionist:
     handler: src/handler.receptionist
+    events:
+      - http: POST receptionist
+  event:
+    handler: src/handler.event
 
 resources:
   Resources:
