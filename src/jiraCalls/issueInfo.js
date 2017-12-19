@@ -1,5 +1,4 @@
 const axios = require('axios');
-//import axios from 'axios';
 
 const jiraDetails = {
 	name: process.env.JIRA_NAME,

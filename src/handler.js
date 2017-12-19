@@ -4,7 +4,7 @@ const OAuth = require('./oauth.js');
 const Templates = require('./templates.js');
 const SlackClient = require('./slackClient.js');
 const Luis = require('./luis.js');
-const jiraCalls = requireDir('./jiraCalls');
+const IntentHandlers = requireDir('./intentHandlers');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2"
@@ -52,6 +52,7 @@ module.exports.authorized = (event, context, callback) => {
 // a HTTP 200 response.
 module.exports.receptionist = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
+    console.log("Text: " + JSON.stringify(jsonBody));
     const response = {
           statusCode: 200
     };
@@ -61,6 +62,7 @@ module.exports.receptionist = (event, context, callback) => {
             'Content-Type': 'application/x-www-form-urlencoded'
         };
         response.body = jsonBody.challenge;
+    // only respond to tags
     } else {
         // asynchronously call event Lambda
         lambda.invoke({
@@ -85,7 +87,6 @@ module.exports.receptionist = (event, context, callback) => {
 
 module.exports.event = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
-    console.log("Text: " + jsonBody.event.text);
 
     if (jsonBody.type === 'event_callback'){
         OAuth.retrieveAccessToken(jsonBody.team_id)
@@ -117,11 +118,11 @@ const handleIntent = (response, event, token) => {
     }
 
     // hand off execution to intended JIRA handler
-    if (intent in jiraCalls){
+    if (intent in IntentHandlers){
         if (entity === null && intent !== 'None'){
             SlackClient.send(event, "Error: Entity not found.", token);
         } else {
-            jiraCalls[intent].process(event, token, entity);
+            IntentHandlers[intent].process(event, token, entity);
         }
     } else {
         SlackClient.send(event, "Error: Feature not implemented yet.", token);
