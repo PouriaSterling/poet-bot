@@ -10,6 +10,6 @@ module.exports.process = (event, token, issueID) => {
 const respond = (jiraResponse, event, token, issueID) => {
     const desc = jiraResponse['fields']['description'];
 
-    const response = "*Description of: " + issueID + '*\n```' + desc + '```';
+    const response = "*Description of " + issueID + '*\n```' + desc + '```';
     SlackClient.send(event, response, token);
 };

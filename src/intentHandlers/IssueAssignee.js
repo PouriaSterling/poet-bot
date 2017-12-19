@@ -11,6 +11,6 @@ const respond = (jiraResponse, event, token, issueID) => {
     const assignee = jiraResponse['fields']['assignee']['displayName'];
 
     const response = "*Assignee of " + issueID + '*\n>' + assignee;
-    return SlackClient.send(event, response, token);
+    SlackClient.send(event, response, token);
 };
 

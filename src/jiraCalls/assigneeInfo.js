@@ -7,12 +7,11 @@ const jiraDetails = {
 	search_endpoint: process.env.JIRA_SEARCH_ENDPOINT
 };
 
-module.exports.process = (name) => {
-    const query =
+module.exports.process = (jql) => {
     console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.search_endpoint);
     return axios.get(jiraDetails.url + jiraDetails.search_endpoint , {
         params: {
-            jql: "assignee=" + name + " and status='in progress'"
+            jql: jql
         },
         auth: {
             username: jiraDetails.name,

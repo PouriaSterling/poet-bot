@@ -2,7 +2,8 @@ const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 
 module.exports.process = (event, token, name) => {
-    Jira.process(name)
+    const jql = "assignee=" + name + " and status='in progress'";
+    Jira.process(jql)
         .then((response) => respond(response, event, token, name))
         .catch(error => console.log("JiraErr: " + error));
 };
@@ -23,5 +24,5 @@ const respond = (jiraResponse, event, token, name) => {
         response += " is not currently working on any issues*";
     }
 
-    return SlackClient.send(event, response, token);
+    SlackClient.send(event, response, token);
 };
