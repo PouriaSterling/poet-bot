@@ -1,12 +1,20 @@
-# poet-bot
+# Poet-bot
 
-A serverless natural language processing Slack bot that responds to questions regarding JIRA
+
+Project Oriented Enlightenment Tool (Poet) is a serverless natural language processing Slack bot that responds to questions regarding JIRA.
 
 ## Configuration
 
 * [Create an AWS account](https://aws.amazon.com/free/) if haven't got one already
-* [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://serverless.com/framework/docs/providers/aws/guide/credentials/)
-* [Create your Slack app](https://api.slack.com/slack-apps#create-app) and configure its credentials by creating a `local.yml` file:
+* [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://www.youtube.com/watch?v=mRkUnA3mEt4).
+* Clone this repository and change directory by running:
+
+    ```
+    git clone https://github.com/PouriaSterling/poet-bot.git
+    cd poet-bot
+    ```
+
+* [Create your Slack app](https://api.slack.com/slack-apps#create-app) and configure its credentials as well as those for Luis and JIRA by creating a `local.yml` file:
 
 	```
 	# Local variables -- DO NOT COMMIT!
@@ -15,6 +23,7 @@ A serverless natural language processing Slack bot that responds to questions re
 	  slack:
 	    clientId: "<Your Dev Slack App Client ID>"
 	    clientSecret: <Your Dev Slack App Client Secret>
+	    botId: "<Your Dev Slack Bot ID>"
 
       luis:
         url: <Your Dev Luis Endpoint URL>
@@ -28,6 +37,7 @@ A serverless natural language processing Slack bot that responds to questions re
 	  slack:
 	    clientId: "<Your Production Slack App Client ID>"
 	    clientSecret: <Your Production Slack App Client Secret>
+	    botId: "<Your Production Slack Bot ID>"
 
 	  luis:
         url: <Your Production Luis Endpoint URL>
@@ -38,7 +48,11 @@ A serverless natural language processing Slack bot that responds to questions re
         url: "<Your Production JIRA Base URL>"
 	```
 
-  Note that the clientid must be quoted otherwise it is interpreted as a number. Do not commit this file. It is already Git ignored.
+  Notes:
+  * 'clientid' must be quoted otherwise it is interpreted as a number.
+  * Leave your 'botId' fields empty for now, we will configure them after you've created your bot.
+  * Do not commit this file. It is already Git ignored.
+
 * Deploy the server to AWS Lambda:
 
 	```
@@ -70,4 +84,27 @@ A serverless natural language processing Slack bot that responds to questions re
 
 * Go to your Slack workspace and invite the bot you just added to a desired channel
 
-* You're all set to start asking your bot about JIRA!
+* Now you can populate the botId field of your local.yml file in a few different ways. The ID will start with a 'U' and be followed by 8 alphanumeric characters. In Slack,
+  * Go to `Manage members` and select `Download member list as a CSV` and look for your bot's `userid` field. Note you may not have sufficient priveleges in your workspace to access this page.
+  * Send a message mentioning the bot using `@YOUR_BOT_NAME`, then hovering your mouse over the blue highlighted name should display a link in the bottom left of your browser. The ID is after the last forward slash.
+  * If the above doesnt work, you can right click on the blue highlighted name and select `inspect`. You will find the botID at the end of the `href` attribute
+  * *Note:* Deleting or re-adding the bot will cause this ID to change.
+
+* You're all set to start asking your bot about JIRA! Start by greeting the bot or asking for help.
+
+
+## Development
+
+If you are making changes to only a single Lambda function and would like to deploy your changes, you can use
+
+```
+sls deploy function -f <FUNCTION_NAME>
+```
+
+to only deploy changes to that function. If you make . Alternatively , you can run a local offline version of your Lambdas using
+
+```
+sls offline start
+```
+
+and sending requests using a program like [Postman](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop?hl=en)

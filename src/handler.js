@@ -12,7 +12,8 @@ const lambda = new AWS.Lambda({
 
 const client = {
 	id: process.env.CLIENT_ID,
-	secret: process.env.CLIENT_SECRET
+	secret: process.env.CLIENT_SECRET,
+	botID: process.env.SLACK_BOT_ID
 };
 
 module.exports.install = (event, context, callback) => {
@@ -57,13 +58,17 @@ module.exports.receptionist = (event, context, callback) => {
           statusCode: 200
     };
 
+    console.log(jsonBody.event.text);
+    console.log(`<@${client.botID}>`);
+    console.log(jsonBody.event.text.includes(`<@${client.botID}>`));
+
     if (jsonBody.type === 'url_verification'){
         response.headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         };
         response.body = jsonBody.challenge;
     // only respond to tags
-    } else {
+    } else if (jsonBody.event.text.includes(`<@${client.botID}>`)){
         // asynchronously call event Lambda
         lambda.invoke({
             FunctionName: 'poet-bot-dev-event',

@@ -15,6 +15,7 @@ provider:
   environment:
     CLIENT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientId}
     CLIENT_SECRET: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
+    SLACK_BOT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.botId}
     LUIS_URL: ${file(local.yml):${opt:stage, self:provider.stage}.luis.url}
     ACCESS_TOKEN_TABLE_NAME: ${self:resources.Resources.accessTokenTable.Properties.TableName}
     JIRA_NAME: ${file(local.yml):${opt:stage, self:provider.stage}.jira.name}
