@@ -1,5 +1,6 @@
 const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
+const Error = require('../error.js');
 
 module.exports.process = (event, token, status) => {
     const jql = "status='" + status + "' ORDER BY updated DESC";
@@ -9,24 +10,32 @@ module.exports.process = (event, token, status) => {
 };
 
 const respond = (jiraResponse, event, token, status) => {
-//    console.log("res: " + JSON.stringify(jiraResponse));
-
-    const numOfIssues = jiraResponse['total'];
-    const limitResponsesTo = 20;
-
-    var response = "*There are ";
-
-    if (numOfIssues > 0){
-        response += numOfIssues + " issues with status _" + status + "_";
-        if (numOfIssues > limitResponsesTo){
-            response += ". Showing " + limitResponsesTo + " most recently updated results.*"
-        }
-        for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
-            response += '\n>' + jiraResponse['issues'][i]['key'];
-        }
-    } else {
-        response += "no issues with status _" + status + "_*";
+    // catch JIRA call errors
+    if (jiraResponse['errorMessages']){
+        Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        return;
     }
 
-    SlackClient.send(event, response, token);
+    const numOfIssues = jiraResponse['total'];
+    const limitResponsesTo = 10;
+
+    var text = "There are ";
+    var attachments = [];
+
+    if (numOfIssues > 0){
+        text += `${numOfIssues} issues with the status *${status.toUpperCase()}*`;
+        if (numOfIssues > limitResponsesTo){
+            text += ". Showing " + limitResponsesTo + " most recently updated results."
+        }
+        for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
+            attachments[i] = {
+                "title": jiraResponse['issues'][i]['key'],
+                "color": "good"
+            }
+        }
+    } else {
+        text += `no issues with status *${status}*`;
+    }
+
+    SlackClient.send(event, text, attachments, token);
 };

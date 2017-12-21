@@ -1,5 +1,6 @@
 const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/issueInfo.js');
+const Error = require('../error.js');
 
 module.exports.process = (event, token, issueID) => {
     Jira.process(issueID)
@@ -8,9 +9,21 @@ module.exports.process = (event, token, issueID) => {
 };
 
 const respond = (jiraResponse, event, token, issueID) => {
+    // catch JIRA call errors
+    if (jiraResponse['errorMessages']){
+        Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        return;
+    }
+
     const assignee = jiraResponse['fields']['assignee']['displayName'];
 
-    const response = "*Assignee of " + issueID + '*\n>' + assignee;
-    SlackClient.send(event, response, token);
+    const text = `Assignee of ${issueID.toUpperCase()}`;
+    const attachments = [
+        {
+            "title": assignee,
+            "color": "good"
+        }
+    ];
+    SlackClient.send(event, text, attachments, token);
 };
 

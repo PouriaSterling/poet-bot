@@ -16,7 +16,10 @@ module.exports.process = (issueID) => {
             password: jiraDetails.password
         }
     })
-    .then(function (response) {
+    .then(response => {
         return response.data;
     })
+    .catch(error => {
+        return error.response.data;
+    });
 };

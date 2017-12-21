@@ -18,7 +18,10 @@ module.exports.process = (jql) => {
             password: jiraDetails.password
         }
     })
-    .then(function (response) {
+    .then(response => {
         return response.data;
     })
+    .catch(error => {
+        return error.response.data;
+    });
 };

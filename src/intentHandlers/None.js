@@ -1,7 +1,6 @@
 const SlackClient = require('../slackClient.js');
+const Error = require('../error.js');
 
 module.exports.process = (event, token, issueID) => {
-    // TODO: handle errors
-    const response = "Error: Your intention could not be found.";
-    return SlackClient.send(event, response, token);
+    Error.report("I didn't quite understand your intent, can you try rephrasing your question? ", event, token);
 };

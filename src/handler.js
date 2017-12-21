@@ -5,6 +5,7 @@ const Templates = require('./templates.js');
 const SlackClient = require('./slackClient.js');
 const Luis = require('./luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
+const Error = require('./error.js');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2"
@@ -59,8 +60,8 @@ module.exports.receptionist = (event, context, callback) => {
     };
 
     console.log(jsonBody.event.text);
-    console.log(`<@${client.botID}>`);
-    console.log(jsonBody.event.text.includes(`<@${client.botID}>`));
+    console.log(`@${client.botID}`);
+    console.log(jsonBody.event.text.includes(`@${client.botID}`));
 
     if (jsonBody.type === 'url_verification'){
         response.headers = {
@@ -68,7 +69,7 @@ module.exports.receptionist = (event, context, callback) => {
         };
         response.body = jsonBody.challenge;
     // only respond to tags
-    } else if (jsonBody.event.text.includes(`<@${client.botID}>`)){
+    } else if (jsonBody.event.text.includes(`@${client.botID}`)){
         // asynchronously call event Lambda
         lambda.invoke({
             FunctionName: 'poet-bot-dev-event',
@@ -125,11 +126,11 @@ const handleIntent = (response, event, token) => {
     // hand off execution to intended JIRA handler
     if (intent in IntentHandlers){
         if (entity === null && intent !== 'None'){
-            SlackClient.send(event, "Error: Entity not found.", token);
+            Error.report("Looks like Luis figured out what you want, but couldn't find an entity.", event, token);
         } else {
             IntentHandlers[intent].process(event, token, entity);
         }
     } else {
-        SlackClient.send(event, "Error: Feature not implemented yet.", token);
+        Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }
 };
