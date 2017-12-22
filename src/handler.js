@@ -127,7 +127,7 @@ const handleIntent = (response, event, token) => {
         entity = response.entities[0].entity;
     }
 
-    const IntentsWithoutEntities = ["None", "Help"];
+    const IntentsWithoutEntities = ["None", "Help", "Greeting"];
 
     // hand off execution to intended JIRA handler
     if (intent in IntentHandlers){
