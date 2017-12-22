@@ -54,22 +54,26 @@ module.exports.authorized = (event, context, callback) => {
 // a HTTP 200 response.
 module.exports.receptionist = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
-    console.log("Text: " + JSON.stringify(jsonBody));
+    console.log("Text: " + JSON.stringify(jsonBody.event.text));
     const response = {
           statusCode: 200
     };
 
-    console.log(jsonBody.event.text);
-    console.log(`@${client.botID}`);
-    console.log(jsonBody.event.text.includes(`@${client.botID}`));
+    // we don't want to respond to Slack HTTP timeout retries
+    var timeoutRetry = false;
+    if (event.headers['X-Slack-Retry-Reason']
+        && event.headers['X-Slack-Retry-Reason'] === 'http_timeout'){
+        console.log("Slack timed out and sent a retry");
+        timeoutRetry = true;
+    }
 
     if (jsonBody.type === 'url_verification'){
         response.headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         };
         response.body = jsonBody.challenge;
-    // only respond to tags
-    } else if (jsonBody.event.text.includes(`@${client.botID}`)){
+    // only respond to tags and ignore http_timeout retries
+    } else if (jsonBody.event.text.includes(`@${client.botID}`) && !timeoutRetry){
         // asynchronously call event Lambda
         lambda.invoke({
             FunctionName: 'poet-bot-dev-event',

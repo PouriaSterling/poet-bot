@@ -34,7 +34,7 @@ const respond = (jiraResponse, event, token, status) => {
             }
         }
     } else {
-        text += `no issues with status *${status}*`;
+        text += `no issues with status *${status.toUpperCase()}*`;
     }
 
     SlackClient.send(event, text, attachments, token);

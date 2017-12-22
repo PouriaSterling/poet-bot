@@ -17,7 +17,7 @@ const respond = (jiraResponse, event, token, issueID) => {
 
     const status = jiraResponse['fields']['status']['name'];
 
-    const text = `Status of ${issueID}`;
+    const text = `Status of ${issueID.toUpperCase()}`;
     const attachments = [
         {
             "title": status,
