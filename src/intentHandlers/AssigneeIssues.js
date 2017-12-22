@@ -1,6 +1,7 @@
 const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 const Error = require('../error.js');
+const Hyperlink = require('../hyperlink.js');
 
 
 module.exports.process = (event, token, name) => {
@@ -28,7 +29,7 @@ const respond = (jiraResponse, event, token, name) => {
         text += ` is working on ${numOfIssues} issue(s)`;
         for (i = 0; i < numOfIssues; i++){
             attachments[i] = {
-                "title": jiraResponse['issues'][i]['key'],
+                "title": Hyperlink.jiraLink(jiraResponse['issues'][i]['key']),
                 "color": "good"
             }
         }

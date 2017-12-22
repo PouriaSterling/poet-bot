@@ -1,6 +1,7 @@
 const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 const Error = require('../error.js');
+const Hyperlink = require('../hyperlink.js');
 
 module.exports.process = (event, token, status) => {
     const jql = "status='" + status + "' ORDER BY updated DESC";
@@ -17,7 +18,7 @@ const respond = (jiraResponse, event, token, status) => {
     }
 
     const numOfIssues = jiraResponse['total'];
-    const limitResponsesTo = 10;
+    const limitResponsesTo = 15;
 
     var text = "There are ";
     var attachments = [];
@@ -29,7 +30,7 @@ const respond = (jiraResponse, event, token, status) => {
         }
         for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
             attachments[i] = {
-                "title": jiraResponse['issues'][i]['key'],
+                "title": Hyperlink.jiraLink(jiraResponse['issues'][i]['key']),
                 "color": "good"
             }
         }

@@ -2,6 +2,7 @@ const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/issueInfo.js');
 const Error = require('../error.js');
 const j2s = require('jira2slack');
+const Hyperlink = require('../hyperlink.js');
 
 
 module.exports.process = (event, token, issueID) => {
@@ -25,7 +26,7 @@ const respond = (jiraResponse, event, token, issueID) => {
         desc = 'This ticken has no description.'
     }
 
-    const text = `Description of ${issueID.toUpperCase()}`;
+    const text = `Description of ${Hyperlink.jiraLink(issueID)}`;
     const attachments = [
         {
             "title": summary,

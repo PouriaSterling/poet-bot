@@ -1,6 +1,7 @@
 const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/issueInfo.js');
 const Error = require('../error.js');
+const Hyperlink = require('../hyperlink.js');
 
 module.exports.process = (event, token, issueID) => {
     Jira.process(issueID)
@@ -17,7 +18,7 @@ const respond = (jiraResponse, event, token, issueID) => {
 
     const assignee = jiraResponse['fields']['assignee']['displayName'];
 
-    const text = `Assignee of ${issueID.toUpperCase()}`;
+    const text = `Assignee of ${Hyperlink.jiraLink(issueID)}`;
     const attachments = [
         {
             "title": assignee,
