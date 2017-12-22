@@ -111,7 +111,7 @@ const handleEvent = (event, token) => {
         // ignore ourselves
         if (!event.subtype || event.subtype !== 'bot_message') {
             // call Luis
-            Luis.process(event.text)
+            Luis.process(event.text.replace(`<@${client.botID}>`, ''))
                 .then((response) => handleIntent(response, event, token))
                 .catch(error => console.log("HandlerErr: " + error));
         }
@@ -127,10 +127,12 @@ const handleIntent = (response, event, token) => {
         entity = response.entities[0].entity;
     }
 
+    const IntentsWithoutEntities = ["None", "Help"];
+
     // hand off execution to intended JIRA handler
     if (intent in IntentHandlers){
-        if (entity === null && intent !== 'None'){
-            Error.report("Looks like Luis figured out what you want, but couldn't find an entity.", event, token);
+        if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
+            Error.report("Looks like Luis figured out what you want, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
         } else {
             IntentHandlers[intent].process(event, token, entity);
         }
