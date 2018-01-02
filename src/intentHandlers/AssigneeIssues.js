@@ -1,20 +1,39 @@
-const SlackClient = require('../slackClient.js');
+const SlackClient = require('../helpers/slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
-const Error = require('../error.js');
-const Hyperlink = require('../hyperlink.js');
+const Error = require('../helpers/error.js');
+const Hyperlink = require('../helpers/hyperlink.js');
 
 
-module.exports.process = (event, token, name) => {
+module.exports.process = (event, token, name, entityType) => {
+    if (entityType == "Self"){
+        // convert userID to username
+        SlackClient.usersProfileGet(event.user, token)
+            .then((userName) => callJira(event, token, userName))
+            .catch(error => console.log("Conversion Error: " + error));
+//        callJira(event, token, SlackClient.usersProfileGet(event.user, token));
+    }else{
+        callJira(event, token, name);
+    }
+};
+
+const callJira = (event, token, name) => {
+    console.log(`Assignee name: ${name}`)
     const jql = "assignee=" + name + " and status='in progress'";
     Jira.process(jql)
         .then((response) => respond(response, event, token, name))
         .catch(error => console.log("JiraErr: " + error));
-};
+}
 
 const respond = (jiraResponse, event, token, name) => {
     // catch JIRA call errors
     if (jiraResponse['errorMessages']){
         Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        return;
+    }
+
+    // catch JIRA call warnings
+    if (jiraResponse['warningMessages']){
+        Error.report("JIRA warning: " + jiraResponse['warningMessages'], event, token);
         return;
     }
 
@@ -37,5 +56,5 @@ const respond = (jiraResponse, event, token, name) => {
         text += " is not currently working on any issues";
     }
 
-    SlackClient.send(event, text, attachments, token);
+    SlackClient.postMessage(event, text, attachments, token);
 };

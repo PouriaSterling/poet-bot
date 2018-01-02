@@ -1,7 +1,7 @@
-const SlackClient = require('../slackClient.js');
+const SlackClient = require('../helpers/slackClient.js');
 const Jira = require('../jiraCalls/issueInfo.js');
-const Error = require('../error.js');
-const Hyperlink = require('../hyperlink.js');
+const Error = require('../helpers/error.js');
+const Hyperlink = require('../helpers/hyperlink.js');
 
 
 module.exports.process = (event, token, issueID) => {
@@ -26,5 +26,5 @@ const respond = (jiraResponse, event, token, issueID) => {
             "color": "good"
         }
     ];
-    SlackClient.send(event, text, attachments, token);
+    SlackClient.postMessage(event, text, attachments, token);
 };

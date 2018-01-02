@@ -18,12 +18,28 @@ module.exports.retrieveAccessToken = (teamId) => {
 	});
 };
 
-module.exports.storeAccessToken = (teamId, botAccessToken) => {
+module.exports.retrieveUserAccessToken = (teamId) => {
+	const params = {
+		TableName: accessTokenTableName,
+		Key: {
+			teamId: teamId
+		}
+	};
+
+	return new Promise((resolve, reject) => {
+		database.get(params).promise()
+			.then(result => resolve(result.Item.userAccessToken))
+			.catch(error => reject(new Error(`Error retrieving user OAuth access token: ${error}`)));
+	});
+};
+
+module.exports.storeAccessToken = (teamId, botAccessToken, userAccessToken) => {
 	const params = {
 		TableName: accessTokenTableName,
 		Item: {
 			teamId: teamId,
-			botAccessToken: botAccessToken
+			botAccessToken: botAccessToken,
+			userAccessToken: userAccessToken
 		}
 	};
 	

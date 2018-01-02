@@ -1,7 +1,7 @@
-const SlackClient = require('../slackClient.js');
+const SlackClient = require('../helpers/slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
-const Error = require('../error.js');
-const Hyperlink = require('../hyperlink.js');
+const Error = require('../helpers/error.js');
+const Hyperlink = require('../helpers/hyperlink.js');
 
 module.exports.process = (event, token, status) => {
     const jql = "status='" + status + "' ORDER BY updated DESC";
@@ -38,5 +38,5 @@ const respond = (jiraResponse, event, token, status) => {
         text += `no issues with status *${status.toUpperCase()}*`;
     }
 
-    SlackClient.send(event, text, attachments, token);
+    SlackClient.postMessage(event, text, attachments, token);
 };

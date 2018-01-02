@@ -2,10 +2,10 @@ const https = require('https');
 const requireDir = require('require-dir');
 const OAuth = require('./oauth.js');
 const Templates = require('./templates.js');
-const SlackClient = require('./slackClient.js');
-const Luis = require('./luis.js');
+const SlackClient = require('./helpers/slackClient.js');
+const Luis = require('./helpers/luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
-const Error = require('./error.js');
+const Error = require('./helpers/error.js');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2"
@@ -35,7 +35,8 @@ module.exports.authorized = (event, context, callback) => {
 		response.on('data', chunk => body += chunk);
 		response.on('end', () => {
 			const jsonBody = JSON.parse(body);
-			OAuth.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token)
+		    console.log(`Auth: ${body}`);
+			OAuth.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
 				.catch(error => console.log(error));
 		});
 	});
@@ -55,6 +56,8 @@ module.exports.authorized = (event, context, callback) => {
 module.exports.receptionist = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
     console.log("Text: " + JSON.stringify(jsonBody.event.text));
+    console.log("Event: " + JSON.stringify(jsonBody.event));
+    console.log("All: " + JSON.stringify(jsonBody));
     const response = {
           statusCode: 200
     };
@@ -123,8 +126,10 @@ const handleIntent = (response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     const intent = response.topScoringIntent.intent;
     var entity = null;
+    var entityType = null;
     if (response.entities.length != 0){
         entity = response.entities[0].entity;
+        entityType = response.entities[0].type;
     }
 
     const IntentsWithoutEntities = ["None", "Help", "Greeting"];
@@ -132,9 +137,9 @@ const handleIntent = (response, event, token) => {
     // hand off execution to intended JIRA handler
     if (intent in IntentHandlers){
         if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
-            Error.report("Looks like Luis figured out what you want, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
         } else {
-            IntentHandlers[intent].process(event, token, entity);
+            IntentHandlers[intent].process(event, token, entity, entityType);
         }
     } else {
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
