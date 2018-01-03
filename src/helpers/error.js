@@ -1,4 +1,4 @@
-const SlackClient = require('./slackClient.js');
+const SlackClient = require('../slackClient.js');
 
 module.exports.report = (errorMessage, event, token) => {
     SlackClient.postMessage(event, "Sorry about that, something went wrong :cry:",

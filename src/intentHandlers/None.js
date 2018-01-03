@@ -1,4 +1,4 @@
-const SlackClient = require('../helpers/slackClient.js');
+const SlackClient = require('../slackClient.js');
 const Error = require('../helpers/error.js');
 
 module.exports.process = (event, token, issueID) => {

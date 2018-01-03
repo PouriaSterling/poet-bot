@@ -1,4 +1,4 @@
-const SlackClient = require('../helpers/slackClient.js');
+const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/issueInfo.js');
 const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');

@@ -1,4 +1,4 @@
-const SlackClient = require('../helpers/slackClient.js');
+const SlackClient = require('../slackClient.js');
 
 module.exports.process = (event, token, issueID) => {
     const text = ":wave::smiley:";

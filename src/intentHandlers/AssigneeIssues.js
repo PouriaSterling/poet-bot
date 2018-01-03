@@ -1,16 +1,16 @@
-const SlackClient = require('../helpers/slackClient.js');
+const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
 
 
-module.exports.process = (event, token, name, entityType) => {
+module.exports.process = (event, token, name, entityType, team_id) => {
     if (entityType == "Self"){
         // convert userID to username
-        SlackClient.usersProfileGet(event.user, token)
+        SlackClient.usersProfileGet(event.user, event, team_id)
             .then((userName) => callJira(event, token, userName))
             .catch(error => console.log("Conversion Error: " + error));
-//        callJira(event, token, SlackClient.usersProfileGet(event.user, token));
+//        callJira(event, token, SlackClient.usersProfileGet(event.user, event));
     }else{
         callJira(event, token, name);
     }

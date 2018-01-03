@@ -2,7 +2,7 @@ const https = require('https');
 const requireDir = require('require-dir');
 const OAuth = require('./oauth.js');
 const Templates = require('./templates.js');
-const SlackClient = require('./helpers/slackClient.js');
+const SlackClient = require('./slackClient.js');
 const Luis = require('./helpers/luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
 const Error = require('./helpers/error.js');
@@ -103,26 +103,27 @@ module.exports.event = (event, context, callback) => {
 
     if (jsonBody.type === 'event_callback'){
         OAuth.retrieveAccessToken(jsonBody.team_id)
-            .then(botAccessToken => handleEvent(jsonBody.event, botAccessToken))
+            .then(botAccessToken => handleEvent(event, botAccessToken))
             .catch(error => console.log(error));
 	}
 };
 
 
 const handleEvent = (event, token) => {
-	if (event.type === 'message'){
+    const jsonBody = JSON.parse(event.body);
+	if (jsonBody.event.type === 'message'){
         // ignore ourselves
-        if (!event.subtype || event.subtype !== 'bot_message') {
+        if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
             // call Luis
-            Luis.process(event.text.replace(`<@${client.botID}>`, ''))
-                .then((response) => handleIntent(response, event, token))
+            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
                 .catch(error => console.log("HandlerErr: " + error));
         }
 	}
 };
 
 // Report error or call the JIRA handler function based on Luis response
-const handleIntent = (response, event, token) => {
+const handleIntent = (response, event, token, team_id) => {
     console.log("LUIS: " + JSON.stringify(response));
     const intent = response.topScoringIntent.intent;
     var entity = null;
@@ -139,7 +140,7 @@ const handleIntent = (response, event, token) => {
         if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
             Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
         } else {
-            IntentHandlers[intent].process(event, token, entity, entityType);
+            IntentHandlers[intent].process(event, token, entity, entityType, team_id);
         }
     } else {
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
