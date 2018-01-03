@@ -5,20 +5,20 @@ const Hyperlink = require('../helpers/hyperlink.js');
 
 
 module.exports.process = (event, token, entity, entityType, team_id) => {
-    if (entityType == "Self" || entityType == "Mention"){
-        var userID = null;
         if (entityType == "Self"){
-            userID = event.user;
-        }else{
-            userID = entity.toUpperCase();
+            entity = event.user;
+        }else if (entityType == "Mention"){
+            entity = entity.toUpperCase();
         }
-        // convert userID to username
-        SlackClient.usersProfileGet(userID, event, team_id)
-            .then((userName) => callJira(event, token, userName))
+        SlackClient.GetFullName(entity, entityType, token)
+            .then((fullName) => {
+                if (fullName == 'NameNotFound'){
+                    Error.report(`Error converting ${entity} to a username`, event, token)
+                }else{
+                    callJira(event, token, fullName);
+                }
+            })
             .catch(error => console.log("Conversion Error: " + error));
-    }else{
-        callJira(event, token, entity);
-    }
 };
 
 const callJira = (event, token, name) => {
@@ -46,7 +46,7 @@ const respond = (jiraResponse, event, token, name) => {
 
     const numOfIssues = jiraResponse['total'];
 
-    var text = name;
+    var text = name.replace(/"/g, '');
     var attachments = [];
 
     if (numOfIssues > 0){

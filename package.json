@@ -7,10 +7,12 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@slack/client": "^3.7.0",
+    "async": "^2.6.0",
     "aws-sdk": "^2.170.0",
     "axios": "^0.17.1",
     "jira2slack": "^1.0.2",
-    "require-dir": "^0.3.2"
+    "require-dir": "^0.3.2",
+    "titlecase": "^1.1.2"
   },
   "devDependencies": {
     "cheerio": "^0.22.0",
