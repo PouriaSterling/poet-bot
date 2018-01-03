@@ -4,15 +4,20 @@ const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
 
 
-module.exports.process = (event, token, name, entityType, team_id) => {
-    if (entityType == "Self"){
+module.exports.process = (event, token, entity, entityType, team_id) => {
+    if (entityType == "Self" || entityType == "Mention"){
+        var userID = null;
+        if (entityType == "Self"){
+            userID = event.user;
+        }else{
+            userID = entity.toUpperCase();
+        }
         // convert userID to username
-        SlackClient.usersProfileGet(event.user, event, team_id)
+        SlackClient.usersProfileGet(userID, event, team_id)
             .then((userName) => callJira(event, token, userName))
             .catch(error => console.log("Conversion Error: " + error));
-//        callJira(event, token, SlackClient.usersProfileGet(event.user, event));
     }else{
-        callJira(event, token, name);
+        callJira(event, token, entity);
     }
 };
 
