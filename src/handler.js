@@ -117,7 +117,9 @@ const handleEvent = (event, token) => {
             // call Luis
             Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
                 .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
-                .catch(error => console.log("HandlerErr: " + error));
+                .catch(error => {
+                    console.log("LuisCatchErr: " + error);
+                });
         }
 	}
 };
@@ -125,6 +127,12 @@ const handleEvent = (event, token) => {
 // Report error or call the JIRA handler function based on Luis response
 const handleIntent = (response, event, token, team_id) => {
     console.log("LUIS: " + JSON.stringify(response));
+    // catch LUIS call errors
+    if (response.statusCode >= 300){
+        Error.report(`Luis Error: ${response.statusCode} - ${response.message}`, event, token);
+        return;
+    }
+
     const intent = response.topScoringIntent.intent;
     var entity = null;
     var entityType = null;
