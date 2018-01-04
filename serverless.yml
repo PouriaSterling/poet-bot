@@ -18,6 +18,7 @@ provider:
     SLACK_BOT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.botId}
     LUIS_URL: ${file(local.yml):${opt:stage, self:provider.stage}.luis.url}
     ACCESS_TOKEN_TABLE_NAME: ${self:resources.Resources.accessTokenTable.Properties.TableName}
+    JIRA_ISSUE_ID_TABLE_NAME: ${self:resources.Resources.jiraIssueIDTable.Properties.TableName}
     JIRA_NAME: ${file(local.yml):${opt:stage, self:provider.stage}.jira.name}
     JIRA_PASSWORD: ${file(local.yml):${opt:stage, self:provider.stage}.jira.password}
     JIRA_URL: ${file(local.yml):${opt:stage, self:provider.stage}.jira.url}
@@ -60,6 +61,19 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: teamId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    jiraIssueIDTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${opt:stage, self:provider.stage}-jiraIssueIDTable
+        AttributeDefinitions:
+          - AttributeName: channel
+            AttributeType: S
+        KeySchema:
+          - AttributeName: channel
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

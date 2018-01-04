@@ -30,7 +30,7 @@ const respond = (jiraResponse, event, token, status) => {
         }
         for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
             attachments[i] = {
-                "title": Hyperlink.jiraLink(jiraResponse['issues'][i]['key']),
+                "title": `${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])} - ${jiraResponse['issues'][i]['fields']['summary']}`,
                 "color": "good"
             }
         }

@@ -101,10 +101,10 @@ If you are making changes to only a single Lambda function and would like to dep
 sls deploy function -f <FUNCTION_NAME>
 ```
 
-to only deploy changes to that function. If you make . Alternatively , you can run a local offline version of your Lambdas using
+You can run a local offline version of your Lambdas using
 
 ```
 sls offline start
 ```
 
-and sending requests using a program like [Postman](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop?hl=en)
+and sending requests using a program such as [Postman](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop?hl=en)

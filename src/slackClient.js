@@ -1,5 +1,5 @@
 const WebClient = require('@slack/client').WebClient;
-const OAuth = require('./oauth.js');
+//const OAuth = require('./oauth.js');
 const toTitleCase = require('titlecase');
 
 module.exports.postMessage = (event, text, attachments, token) => {

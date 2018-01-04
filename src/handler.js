@@ -1,11 +1,12 @@
 const https = require('https');
 const requireDir = require('require-dir');
-const OAuth = require('./oauth.js');
+const DBCalls = require('./helpers/dbCalls.js');
 const Templates = require('./templates.js');
 const SlackClient = require('./slackClient.js');
 const Luis = require('./helpers/luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
 const Error = require('./helpers/error.js');
+const MaintainContext = require('./helpers/maintainContext.js');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2"
@@ -36,7 +37,7 @@ module.exports.authorized = (event, context, callback) => {
 		response.on('end', () => {
 			const jsonBody = JSON.parse(body);
 		    console.log(`Auth: ${body}`);
-			OAuth.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
+			DBCalls.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
 				.catch(error => console.log(error));
 		});
 	});
@@ -92,17 +93,21 @@ module.exports.receptionist = (event, context, callback) => {
                 context.succeed(data.Payload)
             }
         });
+    } else {
+        // ignore bot messages
+        if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
+            MaintainContext.process(jsonBody.event.text, jsonBody.event.channel);
+        }
     }
 
     callback(null, response);
 };
 
-
 module.exports.event = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
 
     if (jsonBody.type === 'event_callback'){
-        OAuth.retrieveAccessToken(jsonBody.team_id)
+        DBCalls.retrieveAccessToken(jsonBody.team_id)
             .then(botAccessToken => handleEvent(event, botAccessToken))
             .catch(error => console.log(error));
 	}
@@ -115,11 +120,27 @@ const handleEvent = (event, token) => {
         // ignore ourselves
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
             // call Luis
-            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
-                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
-                .catch(error => {
-                    console.log("LuisCatchErr: " + error);
-                });
+//            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+//                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
+//                .catch(error => {
+//                    console.log("LuisCatchErr: " + error);
+//                });
+            handleIntent({
+                           "query": "what is the description of that issue",
+                           "topScoringIntent": {
+                             "intent": "IssueDescription",
+                             "score": 0.809439957
+                           },
+                           "entities": [/*
+                             {
+                               "entity": "poet-55",
+                               "type": "IssueID",
+                               "startIndex": 12,
+                               "endIndex": 18,
+                               "score": 0.8065475
+                             }
+                           */]
+                         }, jsonBody.event, token, jsonBody.team_id);
         }
 	}
 };
@@ -145,11 +166,11 @@ const handleIntent = (response, event, token, team_id) => {
 
     // hand off execution to intended JIRA handler
     if (intent in IntentHandlers){
-        if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
-            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
-        } else {
+//        if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
+//            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+//        } else {
             IntentHandlers[intent].process(event, token, entity, entityType, team_id);
-        }
+//        }
     } else {
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }

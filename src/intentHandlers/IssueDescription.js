@@ -3,12 +3,26 @@ const Jira = require('../jiraCalls/issueInfo.js');
 const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
 const j2s = require('jira2slack');
+const DBCalls = require('../helpers/dbCalls.js');
 
 
 module.exports.process = (event, token, issueID) => {
-    Jira.process(issueID)
-        .then((response) => respond(response, event, token, issueID))
-        .catch((error) => console.log("JirErr: " + error));
+    if (!issueID){
+        // TODO: check database for issueID
+        // TODO: error handling
+        DBCalls.retrieveJiraIssueID(event.channel)
+            .then(ContextIssueID => {
+                Error.report(`Context issue: ${ContextIssueID.issueID} @${ContextIssueID.timestamp}`, event, token);
+            })
+            .catch(error => {
+                console.log("Retrieval error: " + error);
+                Error.report("Failed to get context issue: " + error, event, token);
+            });
+    }else{
+        Jira.process(issueID)
+            .then((response) => respond(response, event, token, issueID))
+            .catch((error) => console.log("JirErr: " + error));
+    }
 };
 
 const respond = (jiraResponse, event, token, issueID) => {

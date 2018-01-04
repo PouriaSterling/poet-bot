@@ -53,7 +53,7 @@ const respond = (jiraResponse, event, token, name) => {
         text += ` is working on ${numOfIssues} issue(s)`;
         for (i = 0; i < numOfIssues; i++){
             attachments[i] = {
-                "title": Hyperlink.jiraLink(jiraResponse['issues'][i]['key']),
+                "title": `${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])} - ${jiraResponse['issues'][i]['fields']['summary']}`,
                 "color": "good"
             }
         }
