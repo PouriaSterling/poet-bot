@@ -6,7 +6,6 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 ## Configuration
 
 * [Create an AWS account](https://aws.amazon.com/free/) if haven't got one already
-* [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://www.youtube.com/watch?v=mRkUnA3mEt4).
 * Clone this repository and change directory by running:
 
     ```
@@ -14,6 +13,8 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
     cd poet-bot
     ```
 
+* run `npm install`
+* [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://www.youtube.com/watch?v=mRkUnA3mEt4).
 * [Create your Slack app](https://api.slack.com/slack-apps#create-app) and configure its credentials as well as those for Luis and JIRA by creating a `local.yml` file:
 
 	```
@@ -84,9 +85,9 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 
 * Go to your Slack workspace and invite the bot you just added to a desired channel
 
-* Now you can populate the botId field of your local.yml file in a few different ways. The ID will start with a 'U' and be followed by 8 alphanumeric characters. In Slack,
+* Now you can populate the botId field of your local.yml file in a few different ways. The ID will start with a 'U' and be followed by 8 alphanumeric characters. In Slack, do one of the following:
   * Go to `Manage members` and select `Download member list as a CSV` and look for your bot's `userid` field. Note you may not have sufficient priveleges in your workspace to access this page.
-  * Send a message mentioning the bot using `@YOUR_BOT_NAME`, then hovering your mouse over the blue highlighted name should display a link in the bottom left of your browser. The ID is after the last forward slash.
+  * Send a message mentioning the bot using `@YOUR_BOT_NAME`, then hovering your mouse over the blue highlighted name should display a link in the bottom left corner of your browser. The ID is after the last forward slash.
   * If the above doesnt work, you can right click on the blue highlighted name and select `inspect`. You will find the botID at the end of the `href` attribute
   * *Note:* Deleting or re-adding the bot will cause this ID to change.
 

@@ -7,6 +7,7 @@ const Luis = require('./helpers/luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
 const Error = require('./helpers/error.js');
 const MaintainContext = require('./helpers/maintainContext.js');
+const ContextFetcher = require('./helpers/contextFetcher.js');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2"
@@ -56,9 +57,11 @@ module.exports.authorized = (event, context, callback) => {
 // a HTTP 200 response.
 module.exports.receptionist = (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
-    console.log("Text: " + JSON.stringify(jsonBody.event.text));
-    console.log("Event: " + JSON.stringify(jsonBody.event));
-    console.log("All: " + JSON.stringify(jsonBody));
+    if (jsonBody.type !== 'url_verification'){
+        console.log("Text: " + JSON.stringify(jsonBody.event.text));
+        console.log("Event: " + JSON.stringify(jsonBody.event));
+        console.log("All: " + JSON.stringify(jsonBody));
+    }
     const response = {
           statusCode: 200
     };
@@ -120,27 +123,11 @@ const handleEvent = (event, token) => {
         // ignore ourselves
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
             // call Luis
-//            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
-//                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
-//                .catch(error => {
-//                    console.log("LuisCatchErr: " + error);
-//                });
-            handleIntent({
-                           "query": "what is the description of that issue",
-                           "topScoringIntent": {
-                             "intent": "IssueDescription",
-                             "score": 0.809439957
-                           },
-                           "entities": [/*
-                             {
-                               "entity": "poet-55",
-                               "type": "IssueID",
-                               "startIndex": 12,
-                               "endIndex": 18,
-                               "score": 0.8065475
-                             }
-                           */]
-                         }, jsonBody.event, token, jsonBody.team_id);
+            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
+                .catch(error => {
+                    console.log("LuisCatchErr: " + error);
+                });
         }
 	}
 };
@@ -162,16 +149,32 @@ const handleIntent = (response, event, token, team_id) => {
         entityType = response.entities[0].type;
     }
 
-    const IntentsWithoutEntities = ["None", "Help", "Greeting"];
+    const ValidIntentsWithNoEntities = ["None", "Help", "Greeting", "IssueAssignee", "IssueDescription", "IssueStatus"];
 
-    // hand off execution to intended JIRA handler
+    // hand off execution to intended JIRA handler and handle missing entity errors
     if (intent in IntentHandlers){
-//        if (entity === null && IntentsWithoutEntities.indexOf(intent) == -1){
-//            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
-//        } else {
-            IntentHandlers[intent].process(event, token, entity, entityType, team_id);
-//        }
-    } else {
+        if (entity === null && ValidIntentsWithNoEntities.indexOf(intent) == -1){
+            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+        }else{
+            if (entity === null){
+                ContextFetcher.fetch(event.channel)
+                    .then(response => {
+                        if (entity !== "error"){
+                            intentCaller(event, token, intent, response);
+                        }
+                    })
+                    .catch(error => console.log("Failed to fetch context: " + error));
+
+            }else{
+                IntentHandlers[intent].process(event, token, entity, entityType, team_id);
+            }
+        }
+    }else{
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }
+};
+
+const intentCaller = (event, token, intent, entity) => {
+    console.log("Entity: " + entity);
+    IntentHandlers[intent].process(event, token, entity);
 };

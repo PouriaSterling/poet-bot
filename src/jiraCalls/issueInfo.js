@@ -8,7 +8,7 @@ const jiraDetails = {
 };
 
 module.exports.process = (issueID) => {
-    const ID = issueID.replace(/ /g, '');
+    ID = issueID.replace(/ /g, '');
     console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.issue_endpoint + ID);
     return axios.get(jiraDetails.url + jiraDetails.issue_endpoint + ID, {
         auth: {
