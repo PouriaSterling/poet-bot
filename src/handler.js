@@ -124,7 +124,7 @@ const handleEvent = (event, token) => {
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
             // call Luis
             Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
-                .then((response) => handleIntent(response, jsonBody.event, token, jsonBody.team_id))
+                .then((response) => handleIntent(response, jsonBody.event, token))
                 .catch(error => {
                     console.log("LuisCatchErr: " + error);
                 });
@@ -133,7 +133,7 @@ const handleEvent = (event, token) => {
 };
 
 // Report error or call the JIRA handler function based on Luis response
-const handleIntent = (response, event, token, team_id) => {
+const handleIntent = (response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     // catch LUIS call errors
     if (response.statusCode >= 300){
@@ -149,29 +149,51 @@ const handleIntent = (response, event, token, team_id) => {
         entityType = response.entities[0].type;
     }
 
-    const ValidIntentsWithNoEntities = ["None", "Help", "Greeting", "IssueAssignee", "IssueDescription", "IssueStatus"];
+//    const ValidIntentsWithNoEntities = ["None", "Help", "Greeting", "IssueAssignee", "IssueDescription", "IssueStatus"];
+    const IntentsWithOptionalContextEntities = ["IssueAssignee", "IssueDescription", "IssueStatus"];
+    const IntentsWithoutEntities = ["None", "Help", "Greeting"];
 
     // hand off execution to intended JIRA handler and handle missing entity errors
     if (intent in IntentHandlers){
-        if (entity === null && ValidIntentsWithNoEntities.indexOf(intent) == -1){
-            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+
+        if (entity || IntentsWithoutEntities.indexOf(intent) != -1){
+            console.log('Intent 1');
+            IntentHandlers[intent].process(event, token, entity, entityType);
         }else{
-            if (entity === null){
-                ContextFetcher.fetch(event.channel)
+            if (IntentsWithOptionalContextEntities.indexOf(intent) != -1){
+                console.log('Intent 1');
+                ContextFetcher.fetch(event, token)
                     .then(response => {
                         if (entity !== "error"){
-                            intentCaller(event, token, intent, response);
+                            IntentHandlers[intent].process(event, token, response);
                         }
                     })
                     .catch(error => console.log("Failed to fetch context: " + error));
-
             }else{
-                IntentHandlers[intent].process(event, token, entity, entityType, team_id);
+                console.log('Intent 1');
+                Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
             }
         }
     }else{
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }
+
+//        if (entity === null && ValidIntentsWithNoEntities.indexOf(intent) == -1){
+//            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+//        }else{
+//            if (entity === null){
+//                ContextFetcher.fetch(event.channel)
+//                    .then(response => {
+//                        if (entity !== "error"){
+//                            intentCaller(event, token, intent, response);
+//                        }
+//                    })
+//                    .catch(error => console.log("Failed to fetch context: " + error));
+//
+//            }else{
+//                IntentHandlers[intent].process(event, token, entity, entityType);
+//            }
+//        }
 };
 
 const intentCaller = (event, token, intent, entity) => {

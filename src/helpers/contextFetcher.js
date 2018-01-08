@@ -1,12 +1,12 @@
 const DBCalls = require('./dbCalls.js');
 
-module.exports.fetch = (channel) => {
+module.exports.fetch = (event, token) => {
     console.log('Fetching...');
     // 1 day expressed as milliseconds. Issues in DB older than 1 day
     // are not considered relevant and are not used.
     const timeout = 86400000;
 
-    return DBCalls.retrieveJiraIssueID(channel)
+    return DBCalls.retrieveJiraIssueID(event.channel)
         .then(ContextIssueID => {
             if (ContextIssueID){
                 console.log(`Context issue: ${ContextIssueID.issueID} @${ContextIssueID.timestamp}`);

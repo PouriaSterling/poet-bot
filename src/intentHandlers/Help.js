@@ -1,6 +1,6 @@
 const SlackClient = require('../slackClient.js');
 
-module.exports.process = (event, token, issueID) => {
+module.exports.process = (event, token) => {
     const text = "Usage instructions :point_down:";
     const attachments = [
         {

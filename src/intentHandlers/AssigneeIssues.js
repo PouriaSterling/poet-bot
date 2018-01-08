@@ -4,7 +4,7 @@ const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
 
 
-module.exports.process = (event, token, entity, entityType, team_id) => {
+module.exports.process = (event, token, entity, entityType) => {
         if (entityType == "Self"){
             entity = event.user;
         }else if (entityType == "Mention"){
