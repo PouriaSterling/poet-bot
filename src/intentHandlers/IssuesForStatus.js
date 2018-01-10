@@ -2,6 +2,7 @@ const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
+const DateHelper = require('../helpers/dateHelper');
 
 module.exports.process = (event, token, status) => {
     const jql = "status='" + status + "' ORDER BY updated DESC";
@@ -18,7 +19,7 @@ const respond = (jiraResponse, event, token, status) => {
     }
 
     const numOfIssues = jiraResponse['total'];
-    const limitResponsesTo = 15;
+    const limitResponsesTo = 10;
 
     var text = "There are ";
     var attachments = [];
@@ -29,9 +30,24 @@ const respond = (jiraResponse, event, token, status) => {
             text += ". Showing " + limitResponsesTo + " most recently updated results."
         }
         for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
+            var formattedDate = DateHelper.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
+            var title = `*${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
-                "title": `${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])} - ${jiraResponse['issues'][i]['fields']['summary']}`,
-                "color": "good"
+//                "text": title,
+//                "color": "good",
+//                "mrkdwn_in": ["text"]
+                "fields": [
+                    {
+                        "value": title,
+                        "short": true
+                    },
+                    {
+                        "value": `Updated ${formattedDate}`,
+                        "short": true
+                    }
+                ],
+                "color": "good",
+                "mrkdwn_in": ["fields"]
             }
         }
     } else {

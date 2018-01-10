@@ -11,6 +11,7 @@
     "aws-sdk": "^2.170.0",
     "axios": "^0.17.1",
     "jira2slack": "^1.0.2",
+    "moment": "^2.20.1",
     "require-dir": "^0.3.2",
     "titlecase": "^1.1.2"
   },

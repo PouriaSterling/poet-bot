@@ -2,7 +2,7 @@ const SlackClient = require('../slackClient.js');
 const Jira = require('../jiraCalls/assigneeInfo.js');
 const Error = require('../helpers/error.js');
 const Hyperlink = require('../helpers/hyperlink.js');
-
+const DateHelper = require('../helpers/dateHelper');
 
 module.exports.process = (event, token, entity, entityType) => {
         if (entityType == "Self"){
@@ -23,7 +23,7 @@ module.exports.process = (event, token, entity, entityType) => {
 
 const callJira = (event, token, name) => {
     console.log(`Assignee name: ${name}`)
-    const jql = "assignee=" + name + " and status='in progress'";
+    const jql = "assignee=" + name + " and status='in progress' ORDER BY updated DESC";
     Jira.process(jql)
         .then((response) => respond(response, event, token, name))
         .catch(error => console.log("JiraErr: " + error));
@@ -52,9 +52,24 @@ const respond = (jiraResponse, event, token, name) => {
     if (numOfIssues > 0){
         text += ` is working on ${numOfIssues} issue(s)`;
         for (i = 0; i < numOfIssues; i++){
+            var formattedDate = DateHelper.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
+            var title = `*${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
-                "title": `${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])} - ${jiraResponse['issues'][i]['fields']['summary']}`,
-                "color": "good"
+//                "text": title,
+//                "color": "good",
+//                "mrkdwn_in": ["text"]
+                "fields": [
+                    {
+                        "value": title,
+                        "short": true
+                    },
+                    {
+                        "value": `Updated ${formattedDate}`,
+                        "short": true
+                    }
+                ],
+                "color": "good",
+                "mrkdwn_in": ["fields"]
             }
         }
     } else {

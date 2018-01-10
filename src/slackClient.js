@@ -14,19 +14,18 @@ module.exports.GetFullName = (target, entityType, token) => {
     const web = new WebClient(token);
     return web.users.list()
         .then(list => {
-            console.log(`User List: ${JSON.stringify(list)}`);
+//            console.log(`User List: ${JSON.stringify(list)}`);
             return findUser(list, target, entityType);
         })
         .catch(err=> console.log(`Error getting user list: ${err}`));
 };
 
 const findUser = (list, target, entityType) => {
-    console.log("Length: " + list.members.length);
     var fullName = null;
     switch(entityType){
         case 'Self':
         case 'Mention':
-            console.log(`Searching for ${target} in Mention`);
+//            console.log(`Searching for ${target} in Mention`);
             for (i = 0; i < list.members.length; i++){
                 if (list.members[i].id == target){
                     fullName = JSON.stringify(list.members[i].real_name);
@@ -35,16 +34,17 @@ const findUser = (list, target, entityType) => {
             }
             break;
         case 'JiraUsername':
-            console.log(`Searching for ${target} in JiraUsername`);
-            for (i = 0; i < list.members.length; i++){
-                if (list.members[i].name == target){
-                    fullName = JSON.stringify(list.members[i].real_name);
-                    break;
-                }
-            }
-            if (!fullName){
-                fullName = target;
-            }
+//            console.log(`Searching for ${target} in JiraUsername`);
+//            for (i = 0; i < list.members.length; i++){
+//                if (list.members[i].name == target){
+//                    fullName = JSON.stringify(list.members[i].real_name);
+//                    break;
+//                }
+//            }
+//            if (!fullName){
+//                fullName = target;
+//            }
+            fullName = target;
             break;
         case 'FullName':
             fullName = JSON.stringify(toTitleCase(target));

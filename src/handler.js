@@ -37,7 +37,6 @@ module.exports.authorized = (event, context, callback) => {
 		response.on('data', chunk => body += chunk);
 		response.on('end', () => {
 			const jsonBody = JSON.parse(body);
-		    console.log(`Auth: ${body}`);
 			DBCalls.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
 				.catch(error => console.log(error));
 		});
@@ -55,16 +54,22 @@ module.exports.authorized = (event, context, callback) => {
 // receptionist Lambda responds to url_verification requests
 // or passes request onto event Lambda and immediately returns
 // a HTTP 200 response.
+var lastReqId;
 module.exports.receptionist = (event, context, callback) => {
+    // TODO decide to keep this or not
+    if (lastReqId == context.awsRequestId) {
+        console.log('Lambda auto retry detected. Aborting.');
+        return context.succeed();
+    }else{
+        lastReqId = context.awsRequestId;
+    };
+
     const jsonBody = JSON.parse(event.body);
     if (jsonBody.type !== 'url_verification'){
         console.log("Text: " + JSON.stringify(jsonBody.event.text));
         console.log("Event: " + JSON.stringify(jsonBody.event));
         console.log("All: " + JSON.stringify(jsonBody));
     }
-    const response = {
-          statusCode: 200
-    };
 
     // we don't want to respond to Slack HTTP timeout retries
     var timeoutRetry = false;
@@ -96,13 +101,16 @@ module.exports.receptionist = (event, context, callback) => {
                 context.succeed(data.Payload)
             }
         });
-    } else {
+    } else if (!timeoutRetry) {
         // ignore bot messages
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
             MaintainContext.process(jsonBody.event.text, jsonBody.event.channel);
         }
     }
 
+    const response = {
+        statusCode: 200
+    };
     callback(null, response);
 };
 
@@ -157,11 +165,9 @@ const handleIntent = (response, event, token) => {
     if (intent in IntentHandlers){
 
         if (entity || IntentsWithoutEntities.indexOf(intent) != -1){
-            console.log('Intent 1');
             IntentHandlers[intent].process(event, token, entity, entityType);
         }else{
             if (IntentsWithOptionalContextEntities.indexOf(intent) != -1){
-                console.log('Intent 1');
                 ContextFetcher.fetch(event, token)
                     .then(response => {
                         if (entity !== "error"){
@@ -170,33 +176,10 @@ const handleIntent = (response, event, token) => {
                     })
                     .catch(error => console.log("Failed to fetch context: " + error));
             }else{
-                console.log('Intent 1');
                 Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
             }
         }
     }else{
         Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }
-
-//        if (entity === null && ValidIntentsWithNoEntities.indexOf(intent) == -1){
-//            Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
-//        }else{
-//            if (entity === null){
-//                ContextFetcher.fetch(event.channel)
-//                    .then(response => {
-//                        if (entity !== "error"){
-//                            intentCaller(event, token, intent, response);
-//                        }
-//                    })
-//                    .catch(error => console.log("Failed to fetch context: " + error));
-//
-//            }else{
-//                IntentHandlers[intent].process(event, token, entity, entityType);
-//            }
-//        }
-};
-
-const intentCaller = (event, token, intent, entity) => {
-    console.log("Entity: " + entity);
-    IntentHandlers[intent].process(event, token, entity);
 };
