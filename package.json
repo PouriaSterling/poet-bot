@@ -13,6 +13,7 @@
     "jira2slack": "^1.0.2",
     "moment": "^2.20.1",
     "require-dir": "^0.3.2",
+    "throw": "^1.1.0",
     "titlecase": "^1.1.2"
   },
   "devDependencies": {

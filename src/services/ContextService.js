@@ -43,22 +43,19 @@ module.exports.fetch = (event, token) => {
             if (ContextIssueID){
                 console.log(`Context issue: ${ContextIssueID.issueID} @${ContextIssueID.timestamp}`);
                 if (ContextIssueID.timestamp + timeout > Date.now()){
-                    console.log('Success');
                     return ContextIssueID.issueID;
                 }else{
                     SlackService.postError(`No JIRA issue has been discussed recently`, event, token);
-                    console.log('Error1');
-                    return "error";
+                    return "tooOld";
                 }
             }else{
                 SlackService.postError(`No JIRA issue has been discussed`, event, token);
-                console.log('Error2');
-                return "error";
+                return "none";
             }
         })
         .catch(error => {
             console.log("Retrieval error: " + error);
-            SlackService.postError("Failed to get context issue: " + error, event, token);
-            return "error";
+//            SlackService.postError("Failed to get context issue: " + error, event, token);
+            throw new Error(error);
         });
 };

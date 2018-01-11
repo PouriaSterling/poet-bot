@@ -1,20 +1,30 @@
+const ContextService = require('../services/ContextService.js');
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 const j2s = require('jira2slack');
+const thrw = require('throw');
 
-module.exports.process = (event, token, issueID) => {
-    JiraService.issueInfo(issueID)
-        .then((response) => respond(response, event, token, issueID))
-        .catch((error) => console.log("JirErr: " + error));
-};
-
-const respond = (jiraResponse, event, token, issueID) => {
-    // catch JIRA call errors
-    if (jiraResponse['errorMessages']){
-        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
-        return;
+module.exports.process = async ((event, token, entities) => {
+    var issueID = null;
+    // if no entity was found by Luis, check for a context issue
+    if (entities.length != 0){
+        issueID = entities[0].entity;
+    }else{
+        issueID = await (ContextService.fetch(event, token)
+            .catch(error => {throw new Error("Error fetching context issue for *Issue Description*:\n" + error.message)}));
+        if (issueID === "none" || issueID === "tooOld"){
+            throw new Error("Error fetching *Issue Description* because Luis couldn't find an entity and no issue has been recently discussed");
+        }
     }
+    issueID = issueID.replace(/ /g, '').toUpperCase();
 
+    // Call JIRA to get information for the issueID
+    const jiraResponse = await (JiraService.issueInfo(issueID)
+        .catch(error => {throw new Error(`Error fetching *Description* of *${issueID}* from JIRA:\n${error.message}`)}));
+
+    // Extract relevant information from the JIRA response
     const summary = jiraResponse['fields']['summary'];
     const status = jiraResponse['fields']['status']['name'];
     const assignee = jiraResponse['fields']['assignee']['displayName'];
@@ -23,6 +33,7 @@ const respond = (jiraResponse, event, token, issueID) => {
         desc = 'This ticken has no description.'
     }
 
+    // construct the response to be sent to Slack
     const text = `Description of ${JiraService.HyperlinkJiraIssueID(issueID)}`;
     const attachments = [
         {
@@ -50,4 +61,4 @@ const respond = (jiraResponse, event, token, issueID) => {
         },
     ];
     SlackService.postMessage(event, text, attachments, token);
-};
+});

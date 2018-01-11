@@ -14,9 +14,9 @@ module.exports.postError = (errorMessage, event, token) => {
     module.exports.postMessage(event, "Whoops :cry:",
         [
             {
-                "title": errorMessage,
+                "text": errorMessage,
                 "color": "danger",
-                "mrkdwn_in": ["title"]
+                "mrkdwn_in": ["text"]
             }
         ],
         token);

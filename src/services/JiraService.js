@@ -8,10 +8,10 @@ const jiraDetails = {
 	search_endpoint: process.env.JIRA_SEARCH_ENDPOINT
 };
 
+// search the JIRA API using an issueID and r eturn the response or throw and error
 module.exports.issueInfo = (issueID) => {
-    ID = issueID.replace(/ /g, '');
-    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.issue_endpoint + ID);
-    return axios.get(jiraDetails.url + jiraDetails.issue_endpoint + ID, {
+    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.issue_endpoint + issueID);
+    return axios.get(jiraDetails.url + jiraDetails.issue_endpoint + issueID, {
         auth: {
             username: jiraDetails.name,
             password: jiraDetails.password
@@ -21,10 +21,12 @@ module.exports.issueInfo = (issueID) => {
         return response.data;
     })
     .catch(error => {
-        return error.response.data;
+        console.log("Jira Error: " + error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages']);
     });
 };
 
+// search the JIRA API using a JQL statement and return the response or throw and error
 module.exports.assigneeInfo = (jql) => {
     console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.search_endpoint);
     return axios.get(jiraDetails.url + jiraDetails.search_endpoint , {
@@ -44,6 +46,7 @@ module.exports.assigneeInfo = (jql) => {
     });
 };
 
+// Given a JIRA issueID as input, return it as a Slack hyperlink
 module.exports.HyperlinkJiraIssueID = (issueID) => {
-    return `<${process.env.JIRA_URL}/browse/${issueID.replace(/ /g, '')}|${issueID.replace(/ /g, '').toUpperCase()}>`
+    return `<${process.env.JIRA_URL}/browse/${issueID}|${issueID.toUpperCase()}>`
 };
