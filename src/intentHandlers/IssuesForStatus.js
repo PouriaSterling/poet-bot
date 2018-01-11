@@ -1,12 +1,10 @@
-const SlackClient = require('../slackClient.js');
-const Jira = require('../jiraCalls/assigneeInfo.js');
-const Error = require('../helpers/error.js');
-const Hyperlink = require('../helpers/hyperlink.js');
-const DateHelper = require('../helpers/dateHelper');
+const SlackService = require('../services/SlackService.js');
+const JiraService = require('../services/JiraService.js');
+const Utils = require('../services/Utils.js');
 
 module.exports.process = (event, token, status) => {
     const jql = "status='" + status + "' ORDER BY updated DESC";
-    Jira.process(jql)
+    JiraService.assigneeInfo(jql)
         .then((response) => respond(response, event, token, status))
         .catch(error => console.log("JiraErr: " + error));
 };
@@ -14,7 +12,7 @@ module.exports.process = (event, token, status) => {
 const respond = (jiraResponse, event, token, status) => {
     // catch JIRA call errors
     if (jiraResponse['errorMessages']){
-        Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
         return;
     }
 
@@ -30,8 +28,8 @@ const respond = (jiraResponse, event, token, status) => {
             text += ". Showing " + limitResponsesTo + " most recently updated results."
         }
         for (i = 0; i < Math.min(numOfIssues, limitResponsesTo); i++){
-            var formattedDate = DateHelper.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
-            var title = `*${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
+            var formattedDate = Utils.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
+            var title = `*${JiraService.HyperlinkJiraIssueID(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
 //                "text": title,
 //                "color": "good",
@@ -54,5 +52,5 @@ const respond = (jiraResponse, event, token, status) => {
         text += `no issues with status *${status.toUpperCase()}*`;
     }
 
-    SlackClient.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event, text, attachments, token);
 };

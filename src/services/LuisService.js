@@ -1,7 +1,6 @@
 const axios = require('axios');
-//import axios from 'axios';
 
-module.exports.process = (question) => {
+module.exports.interpretQuery = (question) => {
     return axios.get(process.env.LUIS_URL + question)
     .then(response => {
         return response.data;

@@ -10,6 +10,18 @@ module.exports.postMessage = (event, text, attachments, token) => {
         .catch(error => console.log(`Error posting Slack message: ${error}`));
 };
 
+module.exports.postError = (errorMessage, event, token) => {
+    module.exports.postMessage(event, "Whoops :cry:",
+        [
+            {
+                "title": errorMessage,
+                "color": "danger",
+                "mrkdwn_in": ["title"]
+            }
+        ],
+        token);
+};
+
 module.exports.GetFullName = (target, entityType, token) => {
     const web = new WebClient(token);
     return web.users.list()

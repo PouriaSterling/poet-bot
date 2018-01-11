@@ -1,16 +1,17 @@
-const https = require('https');
+const ContextService = require('./services/ContextService.js');
+const SlackService = require('./services/SlackService.js');
+const LuisService = require('./services/LuisService.js');
+const DBService = require('./services/DBService.js');
+const Utils = require('./services/Utils.js');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 const requireDir = require('require-dir');
-const DBCalls = require('./helpers/dbCalls.js');
-const Templates = require('./templates.js');
-const SlackClient = require('./slackClient.js');
-const Luis = require('./helpers/luis.js');
 const IntentHandlers = requireDir('./intentHandlers');
-const Error = require('./helpers/error.js');
-const MaintainContext = require('./helpers/maintainContext.js');
-const ContextFetcher = require('./helpers/contextFetcher.js');
+const https = require('https');
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
-  region: "ap-southeast-2"
+  region: "ap-southeast-2",
+  maxRetries: 0
 });
 
 const client = {
@@ -25,7 +26,7 @@ module.exports.install = (event, context, callback) => {
 		headers: {
 			'Content-Type': 'text/html'
 		},
-		body: Templates.install(client.id)
+		body: Utils.installHTML(client.id)
 	});
 };
 
@@ -37,7 +38,7 @@ module.exports.authorized = (event, context, callback) => {
 		response.on('data', chunk => body += chunk);
 		response.on('end', () => {
 			const jsonBody = JSON.parse(body);
-			DBCalls.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
+			DBService.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
 				.catch(error => console.log(error));
 		});
 	});
@@ -47,23 +48,14 @@ module.exports.authorized = (event, context, callback) => {
 		headers: {
 			'Content-Type': 'text/html'
 		},
-		body: Templates.authorized()
+		body: Utils.authorizedHTML()
 	});
 };
 
 // receptionist Lambda responds to url_verification requests
 // or passes request onto event Lambda and immediately returns
 // a HTTP 200 response.
-var lastReqId;
 module.exports.receptionist = (event, context, callback) => {
-    // TODO decide to keep this or not
-    if (lastReqId == context.awsRequestId) {
-        console.log('Lambda auto retry detected. Aborting.');
-        return context.succeed();
-    }else{
-        lastReqId = context.awsRequestId;
-    };
-
     const jsonBody = JSON.parse(event.body);
     if (jsonBody.type !== 'url_verification'){
         console.log("Text: " + JSON.stringify(jsonBody.event.text));
@@ -94,17 +86,17 @@ module.exports.receptionist = (event, context, callback) => {
             }, function(error, data) {
             if (error) {
                 console.log("Invoke error: " + error);
-                context.done('error', error);
+//                context.done('error', error);
             }
             if(data.Payload){
                 console.log("Invoke success: " + data.Payload);
-                context.succeed(data.Payload)
+//                context.succeed(data.Payload)
             }
         });
     } else if (!timeoutRetry) {
         // ignore bot messages
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
-            MaintainContext.process(jsonBody.event.text, jsonBody.event.channel);
+            ContextService.maintainContext(jsonBody.event.text, jsonBody.event.channel);
         }
     }
 
@@ -114,38 +106,50 @@ module.exports.receptionist = (event, context, callback) => {
     callback(null, response);
 };
 
-module.exports.event = (event, context, callback) => {
+module.exports.event = async ((event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
 
     if (jsonBody.type === 'event_callback'){
-        DBCalls.retrieveAccessToken(jsonBody.team_id)
-            .then(botAccessToken => handleEvent(event, botAccessToken))
-            .catch(error => console.log(error));
-	}
-};
+        const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team_id)
+            .catch(error => console.log(error)));
 
+//        handleEvent(event, botAccessToken)
 
-const handleEvent = (event, token) => {
-    const jsonBody = JSON.parse(event.body);
-	if (jsonBody.event.type === 'message'){
-        // ignore ourselves
-        if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
-            // call Luis
-            Luis.process(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
-                .then((response) => handleIntent(response, jsonBody.event, token))
-                .catch(error => {
-                    console.log("LuisCatchErr: " + error);
-                });
-        }
+    	if (jsonBody.event.type === 'message'){
+            // ignore ourselves
+            if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
+                // call Luis
+                const response = await (LuisService.interpretQuery(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+                    .catch(error => {
+                        console.log("LuisCatchErr: " + error);
+                    }));
+                handleIntent(response, jsonBody.event, botAccessToken);
+            }
+    	}
 	}
-};
+});
+
+//const handleEvent = async ((event, token) =>{
+//    const jsonBody = JSON.parse(event.body);
+//	if (jsonBody.event.type === 'message'){
+//        // ignore ourselves
+//        if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
+//            // call Luis
+//            const response = await (LuisService.interpretQuery(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+//                .catch(error => {
+//                    console.log("LuisCatchErr: " + error);
+//                }));
+//            handleIntent(response, jsonBody.event, token);
+//        }
+//	}
+//});
 
 // Report error or call the JIRA handler function based on Luis response
 const handleIntent = (response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     // catch LUIS call errors
     if (response.statusCode >= 300){
-        Error.report(`Luis Error: ${response.statusCode} - ${response.message}`, event, token);
+        SlackService.postError(`Luis Error: ${response.statusCode} - ${response.message}`, event, token);
         return;
     }
 
@@ -168,7 +172,7 @@ const handleIntent = (response, event, token) => {
             IntentHandlers[intent].process(event, token, entity, entityType);
         }else{
             if (IntentsWithOptionalContextEntities.indexOf(intent) != -1){
-                ContextFetcher.fetch(event, token)
+                ContextService.fetch(event, token)
                     .then(response => {
                         if (entity !== "error"){
                             IntentHandlers[intent].process(event, token, response);
@@ -176,10 +180,10 @@ const handleIntent = (response, event, token) => {
                     })
                     .catch(error => console.log("Failed to fetch context: " + error));
             }else{
-                Error.report("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
+                SlackService.postError("Looks like Luis figured out what you intended, but couldn't find an entity. Try rephrasing. If it persists, Luis needs to be trained more. Talk to the developer!", event, token);
             }
         }
     }else{
-        Error.report("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
+        SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
     }
 };

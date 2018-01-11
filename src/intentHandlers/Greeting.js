@@ -1,4 +1,4 @@
-const SlackClient = require('../slackClient.js');
+const SlackService = require('../services/SlackService.js');
 
 module.exports.process = (event, token) => {
     const text = ":wave::smiley:";
@@ -20,5 +20,5 @@ module.exports.process = (event, token) => {
             "color": "#32c8c8"
         }
     ];
-    SlackClient.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event, text, attachments, token);
 };

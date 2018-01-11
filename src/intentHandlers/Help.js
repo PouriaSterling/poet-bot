@@ -1,4 +1,4 @@
-const SlackClient = require('../slackClient.js');
+const SlackService = require('../services/SlackService.js');
 
 module.exports.process = (event, token) => {
     const text = "Usage instructions :point_down:";
@@ -57,5 +57,5 @@ module.exports.process = (event, token) => {
             "mrkdwn_in": ["fields"]
         }
     ];
-    SlackClient.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event, text, attachments, token);
 };

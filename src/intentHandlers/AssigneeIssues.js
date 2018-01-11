@@ -1,8 +1,6 @@
-const SlackClient = require('../slackClient.js');
-const Jira = require('../jiraCalls/assigneeInfo.js');
-const Error = require('../helpers/error.js');
-const Hyperlink = require('../helpers/hyperlink.js');
-const DateHelper = require('../helpers/dateHelper');
+const SlackService = require('../services/SlackService.js');
+const JiraService = require('../services/JiraService.js');
+const Utils = require('../services/Utils');
 
 module.exports.process = (event, token, entity, entityType) => {
         if (entityType == "Self"){
@@ -10,10 +8,10 @@ module.exports.process = (event, token, entity, entityType) => {
         }else if (entityType == "Mention"){
             entity = entity.toUpperCase();
         }
-        SlackClient.GetFullName(entity, entityType, token)
+        SlackService.GetFullName(entity, entityType, token)
             .then((fullName) => {
                 if (fullName == 'NameNotFound'){
-                    Error.report(`Error converting ${entity} to a username`, event, token)
+                    SlackService.postError(`Error converting ${entity} to a username`, event, token)
                 }else{
                     callJira(event, token, fullName);
                 }
@@ -24,7 +22,7 @@ module.exports.process = (event, token, entity, entityType) => {
 const callJira = (event, token, name) => {
     console.log(`Assignee name: ${name}`)
     const jql = "assignee=" + name + " and status='in progress' ORDER BY updated DESC";
-    Jira.process(jql)
+    JiraService.assigneeInfo(jql)
         .then((response) => respond(response, event, token, name))
         .catch(error => console.log("JiraErr: " + error));
 }
@@ -32,13 +30,13 @@ const callJira = (event, token, name) => {
 const respond = (jiraResponse, event, token, name) => {
     // catch JIRA call errors
     if (jiraResponse['errorMessages']){
-        Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
         return;
     }
 
     // catch JIRA call warnings
     if (jiraResponse['warningMessages']){
-        Error.report("JIRA warning: " + jiraResponse['warningMessages'], event, token);
+        SlackService.postError("JIRA warning: " + jiraResponse['warningMessages'], event, token);
         return;
     }
 
@@ -52,8 +50,8 @@ const respond = (jiraResponse, event, token, name) => {
     if (numOfIssues > 0){
         text += ` is working on ${numOfIssues} issue(s)`;
         for (i = 0; i < numOfIssues; i++){
-            var formattedDate = DateHelper.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
-            var title = `*${Hyperlink.jiraLink(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
+            var formattedDate = Utils.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
+            var title = `*${JiraService.HyperlinkJiraIssueID(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
 //                "text": title,
 //                "color": "good",
@@ -76,5 +74,5 @@ const respond = (jiraResponse, event, token, name) => {
         text += " is not currently working on any issues";
     }
 
-    SlackClient.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event, text, attachments, token);
 };

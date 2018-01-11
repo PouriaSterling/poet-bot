@@ -1,4 +1,10 @@
-module.exports.install = (clientId) =>
+const Moment = require('moment');
+
+module.exports.timeFromNow = (date) => {
+    return Moment(date).fromNow();
+}
+
+module.exports.installHTML = (clientId) =>
 	`<!DOCTYPE html>
 	<html>
 		<head>
@@ -13,7 +19,7 @@ module.exports.install = (clientId) =>
 		</body>
 	</html>`;
 
-module.exports.authorized = () =>
+module.exports.authorizedHTML = () =>
 	`<!DOCTYPE html>
 	<html>
 		<head>

@@ -1,11 +1,9 @@
-const SlackClient = require('../slackClient.js');
-const Jira = require('../jiraCalls/issueInfo.js');
-const Error = require('../helpers/error.js');
-const Hyperlink = require('../helpers/hyperlink.js');
+const SlackService = require('../services/SlackService.js');
+const JiraService = require('../services/JiraService.js');
 const j2s = require('jira2slack');
 
 module.exports.process = (event, token, issueID) => {
-    Jira.process(issueID)
+    JiraService.issueInfo(issueID)
         .then((response) => respond(response, event, token, issueID))
         .catch((error) => console.log("JirErr: " + error));
 };
@@ -13,7 +11,7 @@ module.exports.process = (event, token, issueID) => {
 const respond = (jiraResponse, event, token, issueID) => {
     // catch JIRA call errors
     if (jiraResponse['errorMessages']){
-        Error.report("JIRA error: " + jiraResponse['errorMessages'], event, token);
+        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
         return;
     }
 
@@ -25,7 +23,7 @@ const respond = (jiraResponse, event, token, issueID) => {
         desc = 'This ticken has no description.'
     }
 
-    const text = `Description of ${Hyperlink.jiraLink(issueID)}`;
+    const text = `Description of ${JiraService.HyperlinkJiraIssueID(issueID)}`;
     const attachments = [
         {
             "title": summary,
@@ -51,5 +49,5 @@ const respond = (jiraResponse, event, token, issueID) => {
             "mrkdwn_in": ["text"]
         },
     ];
-    SlackClient.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event, text, attachments, token);
 };

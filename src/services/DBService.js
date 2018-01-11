@@ -65,7 +65,6 @@ module.exports.retrieveJiraIssueID = (channel) => {
 	return new Promise((resolve, reject) => {
 		database.get(params).promise()
 			.then(result => {
-//			    console.log(`ALRIGHT: ${result.Item.issueID} @${result.Item.timestamp}`);
 			    resolve(result.Item);
 			})
 			.catch(error => reject(new Error(`Error retrieving context JiraIssueID: ${error}`)));
