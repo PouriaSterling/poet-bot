@@ -1,61 +1,63 @@
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const Utils = require('../services/Utils');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 
-module.exports.process = (event, token, entity, entityType) => {
+module.exports.process = async ((event, token, entities) => {
+    var entity = null;
+    var entityType = null;
+    // check that an entity was found by Luis or call an error
+    if (entities.length != 0){
+        entityType = entities[0].type;
         if (entityType == "Self"){
             entity = event.user;
         }else if (entityType == "Mention"){
             entity = entity.toUpperCase();
+        }else{
+            entity = entities[0].entity;
         }
-        SlackService.GetFullName(entity, entityType, token)
-            .then((fullName) => {
-                if (fullName == 'NameNotFound'){
-                    SlackService.postError(`Error converting ${entity} to a username`, event, token)
-                }else{
-                    callJira(event, token, fullName);
-                }
-            })
-            .catch(error => console.log("Conversion Error: " + error));
-};
-
-const callJira = (event, token, name) => {
-    console.log(`Assignee name: ${name}`)
-    const jql = "assignee=" + name + " and status='in progress' ORDER BY updated DESC";
-    JiraService.assigneeInfo(jql)
-        .then((response) => respond(response, event, token, name))
-        .catch(error => console.log("JiraErr: " + error));
-}
-
-const respond = (jiraResponse, event, token, name) => {
-    // catch JIRA call errors
-    if (jiraResponse['errorMessages']){
-        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
-        return;
+    }else{
+        throw new Error("Error fetching *Assignee Issues* because Luis couldn't figure out who you want to know about");
     }
 
-    // catch JIRA call warnings
-    if (jiraResponse['warningMessages']){
-        SlackService.postError("JIRA warning: " + jiraResponse['warningMessages'], event, token);
-        return;
+    // Get more information about the user via from Slack
+    SlackResponse = await (SlackService.GetFullName(entity, entityType, token)
+        .catch(error => {throw new Error(`Error in *Assignee Issues* while trying to convert ${entity}\n${error}`)}));
+
+    // throw an error if no valid name could be found
+    if (SlackResponse['fullName'] == null && SlackResponse['jiraUsername'] == null ){
+        throw new Error("Error fetching *Assignee Issues*. The user you specified doesn't have enough name information present in Slack");
     }
 
-    console.log("res: " + JSON.stringify(jiraResponse));
+    SlackResponse['jiraUsername'] = "pxsterling";
+    SlackResponse['fullName'] = null;
+    //'"Pouria Sterling"'
+    SlackService.postError(`Converted ${entity} to: Fullname: ${SlackResponse['fullName']}, JiraUsername: ${SlackResponse['jiraUsername']}`, event, token)
+    // Try to find user info on JIRA using jiraUsername first and then using fullName
+    var JiraResponse = null;
+    if (SlackResponse['jiraUsername']){
+        JiraResponse = await (callJira("assignee=" + SlackResponse['jiraUsername'] + " and status='in progress' ORDER BY updated DESC"));
+    }
+    if( (!JiraResponse || JiraResponse === "Error") && SlackResponse['fullName']){
+        JiraResponse = await (callJira("assignee=" + SlackResponse['fullName'] + " and status='in progress' ORDER BY updated DESC"));
+    }else if (!JiraResponse || JiraResponse === "Error"){
+        throw new Error(`Error fetching *Assignee Issues* because neither '${SlackResponse['jiraUsername']}' nor '${SlackResponse['fullName']}' returned any results from JIRA`);
+    }
 
-    const numOfIssues = jiraResponse['total'];
+    console.log("res: " + JSON.stringify(JiraResponse));
 
-    var text = name.replace(/"/g, '');
+    const numOfIssues = JiraResponse['total'];
+
+    var text = SlackResponse['fullName'].replace(/"/g, '');
     var attachments = [];
 
     if (numOfIssues > 0){
         text += ` is working on ${numOfIssues} issue(s)`;
         for (i = 0; i < numOfIssues; i++){
-            var formattedDate = Utils.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
-            var title = `*${JiraService.HyperlinkJiraIssueID(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
+            var formattedDate = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
+            var title = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
-//                "text": title,
-//                "color": "good",
-//                "mrkdwn_in": ["text"]
                 "fields": [
                     {
                         "value": title,
@@ -75,4 +77,10 @@ const respond = (jiraResponse, event, token, name) => {
     }
 
     SlackService.postMessage(event, text, attachments, token);
-};
+});
+
+const callJira = (jql) => {
+    return JiraResponse = JiraService.assigneeInfo(jql)
+        .then(result => {return result;})
+        .catch(error => {return "Error";});
+}

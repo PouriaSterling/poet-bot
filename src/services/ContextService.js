@@ -1,38 +1,35 @@
 const DBService = require('./DBService.js');
 const JiraService = require('./JiraService.js');
 const SlackService = require('./SlackService.js');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 
-module.exports.maintainContext = (message, channel) => {
+module.exports.maintainContext = async ((message, channel) => {
+    // Collect all regex matches in an array
     var matches = message.match(/\w+-\d+/g);
     if (matches){
-        recursiveSearch(matches, channel);
+        // reverse search the matches array
+        for (i = matches.length - 1; i >= 0; i--){
+            var issueExists = true;
+            // query JIRA to determine if the current match is a valid ticket number
+            var response = await (JiraService.issueInfo(matches[i])
+                .catch(error => {
+                    if (error.message === "Issue Does Not Exist"){
+                        issueExists = false;
+                    }
+                }));
+            // store valid issueIDs in the database
+            if (issueExists){
+                console.log("STORING: " + matches[i]);
+                await (DBService.storeJiraIssueID(matches[i].toUpperCase(), channel)
+                   .catch(error => console.log(`Failed to store jiraIssueID for context: ${error}`)));
+               break;
+           }
+        }
     }
-};
+});
 
-const recursiveSearch = (matches, channel) => {
-    console.log("MATCHES: " + matches);
-    // check if the last element of matches is a valid JIRA issue ID
-    JiraService.issueInfo(matches[matches.length - 1])
-        .then(response => {
-            if (!response['errorMessages'] || response['errorMessages'][0] !== "Issue Does Not Exist"){
-                storeIssueID(matches[matches.length - 1], channel);
-            }else{
-                matches.pop();
-                if (matches.length > 0){
-                    recursiveSearch(matches, channel);
-                }
-            }
-        })
-        .catch(error => console.log("MaintainContext Error: " + error));
-};
-
-const storeIssueID = (issueID, channel) => {
-    console.log("STORING: " + issueID);
-    DBService.storeJiraIssueID(issueID.toUpperCase(), channel)
-        .catch(error => console.log(`Failed to store jiraIssueID for context: ${error}`));
-};
-
-module.exports.fetch = (event, token) => {
+module.exports.fetchContextIssue = (event, token) => {
     console.log('Fetching...');
     // 1 day expressed as milliseconds. Issues in DB older than 1 day
     // are not considered relevant and are not used.

@@ -4,7 +4,7 @@ const JiraService = require('../services/JiraService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const j2s = require('jira2slack');
-const thrw = require('throw');
+//const thrw = require('throw');
 
 module.exports.process = async ((event, token, entities) => {
     var issueID = null;
@@ -12,7 +12,7 @@ module.exports.process = async ((event, token, entities) => {
     if (entities.length != 0){
         issueID = entities[0].entity;
     }else{
-        issueID = await (ContextService.fetch(event, token)
+        issueID = await (ContextService.fetchContextIssue(event, token)
             .catch(error => {throw new Error("Error fetching context issue for *Issue Description*:\n" + error.message)}));
         if (issueID === "none" || issueID === "tooOld"){
             throw new Error("Error fetching *Issue Description* because Luis couldn't find an entity and no issue has been recently discussed");
@@ -30,7 +30,7 @@ module.exports.process = async ((event, token, entities) => {
     const assignee = jiraResponse['fields']['assignee']['displayName'];
     var desc = jiraResponse['fields']['description'];
     if (!desc){
-        desc = 'This ticken has no description.'
+        desc = 'This ticket has no description.'
     }
 
     // construct the response to be sent to Slack

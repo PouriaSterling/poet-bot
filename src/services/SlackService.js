@@ -1,6 +1,7 @@
 const WebClient = require('@slack/client').WebClient;
-//const OAuth = require('./oauth.js');
 const toTitleCase = require('titlecase');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 
 module.exports.postMessage = (event, text, attachments, token) => {
     const web = new WebClient(token);
@@ -22,50 +23,47 @@ module.exports.postError = (errorMessage, event, token) => {
         token);
 };
 
-module.exports.GetFullName = (target, entityType, token) => {
+module.exports.GetFullName = async ((target, entityType, token) => {
     const web = new WebClient(token);
-    return web.users.list()
-        .then(list => {
-//            console.log(`User List: ${JSON.stringify(list)}`);
-            return findUser(list, target, entityType);
-        })
-        .catch(err=> console.log(`Error getting user list: ${err}`));
-};
+    const userList = await (web.users.list()
+        .catch(err=> console.log(`Error getting user list: ${err}`)));
 
-const findUser = (list, target, entityType) => {
+    console.log(`User List: ${JSON.stringify(userList)}`);
+
     var fullName = null;
+    var jiraUsername = null;
+
     switch(entityType){
         case 'Self':
         case 'Mention':
-//            console.log(`Searching for ${target} in Mention`);
-            for (i = 0; i < list.members.length; i++){
-                if (list.members[i].id == target){
-                    fullName = JSON.stringify(list.members[i].real_name);
+            for (i = 0; i < userList.members.length; i++){
+                if (userList.members[i].id == target){
+                    fullName = JSON.stringify(userList.members[i].real_name);
+                    jiraUsername = JSON.stringify(userList.members[i].name);
                     break;
                 }
             }
             break;
         case 'JiraUsername':
-//            console.log(`Searching for ${target} in JiraUsername`);
-//            for (i = 0; i < list.members.length; i++){
-//                if (list.members[i].name == target){
-//                    fullName = JSON.stringify(list.members[i].real_name);
-//                    break;
-//                }
-//            }
-//            if (!fullName){
-//                fullName = target;
-//            }
-            fullName = target;
+            for (i = 0; i < userList.members.length; i++){
+                if (userList.members[i].name == target){
+                    fullName = JSON.stringify(userList.members[i].real_name);
+                    break;
+                }
+            }
+            jiraUsername = target;
             break;
         case 'FullName':
+            for (i = 0; i < userList.members.length; i++){
+                if (userList.members[i].name == target){
+                    jiraUsername = JSON.stringify(userList.members[i].name);
+                    break;
+                }
+            }
             fullName = JSON.stringify(toTitleCase(target));
+            break;
     }
 
-    // didn't find the name in the Slack user list
-    if (!fullName){
-        fullName = 'NameNotFound';
-    }
-    console.log("Found: " + fullName)
-    return fullName;
-}
+    console.log("Found fullname: " + fullName + ", jirausername: " + jiraUsername);
+    return {"fullName": fullName, "jiraUsername": jiraUsername};
+});

@@ -85,7 +85,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 
 * Go to your Slack workspace and invite the bot you just added to a desired channel
 
-* Now you can populate the botId field of your local.yml file in a few different ways. The ID will start with a 'U' and be followed by 8 alphanumeric characters. In Slack, do one of the following:
+* Now you can populate the botId field of your local.yml file in a few different ways. The ID will start with a 'U' and be followed by 8 alphanumeric characters. In the Slack web client, do one of the following:
   * Go to `Manage members` and select `Download member list as a CSV` and look for your bot's `userid` field. Note you may not have sufficient priveleges in your workspace to access this page.
   * Send a message mentioning the bot using `@YOUR_BOT_NAME`, then hovering your mouse over the blue highlighted name should display a link in the bottom left corner of your browser. The ID is after the last forward slash.
   * If the above doesnt work, you can right click on the blue highlighted name and select `inspect`. You will find the botID at the end of the `href` attribute
@@ -109,3 +109,7 @@ sls offline start
 ```
 
 and sending requests using a program such as [Postman](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop?hl=en)
+
+## Adding Functionality
+
+To add new intent functionality, train Luis for the intent and create a new handler in the [/intentHandlers](https://github.com/PouriaSterling/poet-bot/tree/master/src/intentHandlers) folder (making sure to use the exact same name for Luis and the file). Put all your logic in that file. You can use an existing intent handler as a template to get you started.

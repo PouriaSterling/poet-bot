@@ -22,13 +22,13 @@ module.exports.issueInfo = (issueID) => {
     })
     .catch(error => {
         console.log("Jira Error: " + error.response.data['errorMessages']);
-        throw new Error(error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages'] || error.response.data['warningMessages']);
     });
 };
 
 // search the JIRA API using a JQL statement and return the response or throw and error
 module.exports.assigneeInfo = (jql) => {
-    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.search_endpoint);
+    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.search_endpoint + jql);
     return axios.get(jiraDetails.url + jiraDetails.search_endpoint , {
         params: {
             jql: jql
@@ -42,7 +42,8 @@ module.exports.assigneeInfo = (jql) => {
         return response.data;
     })
     .catch(error => {
-        return error.response.data;
+        console.log("Jira Error: " + error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages'] || error.response.data['warningMessages']);
     });
 };
 

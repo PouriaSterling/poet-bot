@@ -55,6 +55,14 @@ module.exports.process = (event, token) => {
             ],
             "color": "warning",
             "mrkdwn_in": ["fields"]
+        },
+        {
+            "title": 'Remember to periodically log in to luis.ai and go to "Review endpoint utterances" to validate new utterances and "Train" Luis.',
+            "color": "warning"
+        },
+        {
+            "text": "Make me smarter! Go <github.com/PouriaSterling/poet-bot#adding-functionality|here>",
+            "color": "warning"
         }
     ];
     SlackService.postMessage(event, text, attachments, token);

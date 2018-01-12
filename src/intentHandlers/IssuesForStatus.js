@@ -1,8 +1,17 @@
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const Utils = require('../services/Utils.js');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 
-module.exports.process = (event, token, status) => {
+module.exports.process = (event, token, entities) => {
+    var status = null;
+    if (entities.length != 0){
+        status = entities[0].entity;
+    }else{
+        throw new Error("Error searching for *Issues by Status* because Luis couldn't figure out the status you meant");
+    }
+
     const jql = "status='" + status + "' ORDER BY updated DESC";
     JiraService.assigneeInfo(jql)
         .then((response) => respond(response, event, token, status))
