@@ -8,7 +8,7 @@ const jiraDetails = {
 	search_endpoint: process.env.JIRA_SEARCH_ENDPOINT
 };
 
-// search the JIRA API using an issueID and r eturn the response or throw and error
+// search the JIRA API using an issueID and return the response or throw and error
 module.exports.issueInfo = (issueID) => {
     console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.issue_endpoint + issueID);
     return axios.get(jiraDetails.url + jiraDetails.issue_endpoint + issueID, {

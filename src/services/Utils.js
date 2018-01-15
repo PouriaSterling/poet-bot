@@ -1,9 +1,12 @@
 const Moment = require('moment');
 
+// return how long ago the argument 'date' is from now in
+// 'friendly time' (e.g. a few seconds ago, 2 days ago)
 module.exports.timeFromNow = (date) => {
     return Moment(date).fromNow();
 }
 
+// HTTP template with embedded Slack install link for this bot
 module.exports.installHTML = (clientId) =>
 	`<!DOCTYPE html>
 	<html>
@@ -19,6 +22,7 @@ module.exports.installHTML = (clientId) =>
 		</body>
 	</html>`;
 
+// HTTP template for routing to after successful installation
 module.exports.authorizedHTML = () =>
 	`<!DOCTYPE html>
 	<html>

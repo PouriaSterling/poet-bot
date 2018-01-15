@@ -4,7 +4,6 @@ const JiraService = require('../services/JiraService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const j2s = require('jira2slack');
-//const thrw = require('throw');
 
 module.exports.process = async ((event, token, entities) => {
     var issueID = null;

@@ -42,17 +42,14 @@ module.exports.fetchContextIssue = (event, token) => {
                 if (ContextIssueID.timestamp + timeout > Date.now()){
                     return ContextIssueID.issueID;
                 }else{
-                    SlackService.postError(`No JIRA issue has been discussed recently`, event, token);
                     return "tooOld";
                 }
             }else{
-                SlackService.postError(`No JIRA issue has been discussed`, event, token);
                 return "none";
             }
         })
         .catch(error => {
             console.log("Retrieval error: " + error);
-//            SlackService.postError("Failed to get context issue: " + error, event, token);
             throw new Error(error);
         });
 };

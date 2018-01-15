@@ -3,6 +3,7 @@ const toTitleCase = require('titlecase');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
+// post a message to Slack
 module.exports.postMessage = (event, text, attachments, token) => {
     const web = new WebClient(token);
     web.chat.postMessage(event.channel, text, {
@@ -11,6 +12,7 @@ module.exports.postMessage = (event, text, attachments, token) => {
         .catch(error => console.log(`Error posting Slack message: ${error}`));
 };
 
+// post an error message to Slack. Function provides consistent error reporting
 module.exports.postError = (errorMessage, event, token) => {
     module.exports.postMessage(event, "Whoops :cry:",
         [
@@ -23,7 +25,9 @@ module.exports.postError = (errorMessage, event, token) => {
         token);
 };
 
-module.exports.GetFullName = async ((target, entityType, token) => {
+// Query Slack for list of users, search for the 'target' and return their
+// fullname and display name (if they exist)
+module.exports.GetFullName = async ((target, targetType, token) => {
     const web = new WebClient(token);
     const userList = await (web.users.list()
         .catch(err=> console.log(`Error getting user list: ${err}`)));
@@ -33,7 +37,8 @@ module.exports.GetFullName = async ((target, entityType, token) => {
     var fullName = null;
     var jiraUsername = null;
 
-    switch(entityType){
+    // search depends on the type of the target
+    switch(targetType){
         case 'Self':
         case 'Mention':
             for (i = 0; i < userList.members.length; i++){

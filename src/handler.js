@@ -107,6 +107,7 @@ module.exports.receptionist = (event, context, callback) => {
     callback(null, response);
 };
 
+// event Lambda calls Luis and palms execution off to intended intent handler
 module.exports.event = async ((event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
 
@@ -129,7 +130,7 @@ module.exports.event = async ((event, context, callback) => {
 	}
 });
 
-// Report error or call the JIRA handler function based on Luis response
+// report error or call the JIRA handler function based on Luis response
 const handleIntent = async ((response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     // catch LUIS call errors
