@@ -4,7 +4,8 @@ const Utils = require('../services/Utils.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
-module.exports.process = (event, token, entities) => {
+module.exports.process = async ((event, token, entities) => {
+    // check that a status entity was correctly identified by Luis, or thrown and error
     var status = null;
     if (entities.length != 0){
         status = entities[0].entity;
@@ -12,25 +13,17 @@ module.exports.process = (event, token, entities) => {
         throw new Error("Error searching for *Issues by Status* because Luis couldn't figure out the status you meant");
     }
 
+    // search JIRA for issues with the specified status
     const jql = "status='" + status + "' ORDER BY updated DESC";
-    JiraService.assigneeInfo(jql)
-        .then((response) => respond(response, event, token, status))
-        .catch(error => console.log("JiraErr: " + error));
-};
-
-const respond = (jiraResponse, event, token, status) => {
-    // catch JIRA call errors
-    if (jiraResponse['errorMessages']){
-        SlackService.postError("JIRA error: " + jiraResponse['errorMessages'], event, token);
-        return;
-    }
+    const jiraResponse = await (JiraService.assigneeInfo(jql)
+        .catch(error => {throw new Error(`Error fetching *Issues for Status* of *${status}* from JIRA:\n${error.message}`)}));
 
     const numOfIssues = jiraResponse['total'];
     const limitResponsesTo = 10;
 
+    // construct the response to Slack
     var text = "There are ";
     var attachments = [];
-
     if (numOfIssues > 0){
         text += `${numOfIssues} issues with the status *${status.toUpperCase()}*`;
         if (numOfIssues > limitResponsesTo){
@@ -40,9 +33,6 @@ const respond = (jiraResponse, event, token, status) => {
             var formattedDate = Utils.timeFromNow(jiraResponse['issues'][i]["fields"]['updated']);
             var title = `*${JiraService.HyperlinkJiraIssueID(jiraResponse['issues'][i]['key'])}* - *${jiraResponse['issues'][i]['fields']['summary']}*`;
             attachments[i] = {
-//                "text": title,
-//                "color": "good",
-//                "mrkdwn_in": ["text"]
                 "fields": [
                     {
                         "value": title,
@@ -57,9 +47,9 @@ const respond = (jiraResponse, event, token, status) => {
                 "mrkdwn_in": ["fields"]
             }
         }
-    } else {
+    }else{
         text += `no issues with status *${status.toUpperCase()}*`;
     }
 
     SlackService.postMessage(event, text, attachments, token);
-};
+});

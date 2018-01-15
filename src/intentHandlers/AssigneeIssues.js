@@ -13,7 +13,7 @@ module.exports.process = async ((event, token, entities) => {
         if (entityType == "Self"){
             entity = event.user;
         }else if (entityType == "Mention"){
-            entity = entity.toUpperCase();
+            entity = entities[0].entity.toUpperCase();
         }else{
             entity = entities[0].entity;
         }
@@ -30,26 +30,27 @@ module.exports.process = async ((event, token, entities) => {
         throw new Error("Error fetching *Assignee Issues*. The user you specified doesn't have enough name information present in Slack");
     }
 
-    SlackResponse['jiraUsername'] = "pxsterling";
-    SlackResponse['fullName'] = null;
-    //'"Pouria Sterling"'
-    SlackService.postError(`Converted ${entity} to: Fullname: ${SlackResponse['fullName']}, JiraUsername: ${SlackResponse['jiraUsername']}`, event, token)
     // Try to find user info on JIRA using jiraUsername first and then using fullName
     var JiraResponse = null;
     if (SlackResponse['jiraUsername']){
         JiraResponse = await (callJira("assignee=" + SlackResponse['jiraUsername'] + " and status='in progress' ORDER BY updated DESC"));
     }
-    if( (!JiraResponse || JiraResponse === "Error") && SlackResponse['fullName']){
+    if( (!JiraResponse || JiraResponse['warningMessages']) && SlackResponse['fullName']){
         JiraResponse = await (callJira("assignee=" + SlackResponse['fullName'] + " and status='in progress' ORDER BY updated DESC"));
-    }else if (!JiraResponse || JiraResponse === "Error"){
-        throw new Error(`Error fetching *Assignee Issues* because neither '${SlackResponse['jiraUsername']}' nor '${SlackResponse['fullName']}' returned any results from JIRA`);
+    }
+    if (!JiraResponse || JiraResponse['warningMessages']){
+        throw new Error(`Error fetching *Assignee Issues* because neither '${SlackResponse['jiraUsername']}' nor ${SlackResponse['fullName']} exist in JIRA`);
     }
 
     console.log("res: " + JSON.stringify(JiraResponse));
 
     const numOfIssues = JiraResponse['total'];
 
-    var text = SlackResponse['fullName'].replace(/"/g, '');
+    if (SlackResponse['fullName']){
+        var text = SlackResponse['fullName'].replace(/"/g, '');
+    }else{
+        var text = SlackResponse['jiraUsername'].replace(/"/g, '');
+    }
     var attachments = [];
 
     if (numOfIssues > 0){
