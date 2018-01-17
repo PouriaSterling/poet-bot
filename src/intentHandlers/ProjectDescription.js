@@ -11,7 +11,7 @@ module.exports.process = async ((event, token) => {
         .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
 
     if (!ContextResponse){
-        throw new Error('Please set the channel project first');
+        throw new Error("No channel project has been set yet, set one using e.g. '@poet Set the project to POET'");
     }
 
     const projectKey = ContextResponse.projectKey;
@@ -25,11 +25,8 @@ module.exports.process = async ((event, token) => {
     const description = jiraResponse['description'];
 
     // construct the response to be sent to Slack
-    var text = 'No description exists for '
-    if (description){
-        text = 'Description of ';
-    }
-    text += JiraService.HyperlinkJiraProjectKey(projectKey, name);
+    const projectKeyLink = JiraService.HyperlinkJiraProjectKey(projectKey, name);
+    const text = description ? `Description of ${projectKeyLink}` : `No description exists for ${projectKeyLink}`;
     const attachments = [
         {
             "text": Slackify(description),

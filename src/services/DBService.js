@@ -35,25 +35,31 @@ module.exports.retrieveAccessToken = (teamId) => {
 	});
 };
 
-module.exports.updateChannelContext = (channel, value, valueType) => {
-    // params set to update issueID
-    var expression = "set issueID = :id, issueIDtimestamp = :ts";
-    var attributeValues = {
-        ":id": value,
-        ":ts": Date.now()
-    }
+module.exports.updateChannelContext = (channel, object) => {
+    const expression = [];
+    const attributeValues = {};
+    Object.keys(object).forEach((key) => {
+        const value = object[key];
+        switch(key){
+            case "issueID":
+                expression.push("issueID = :id", "issueIDtimestamp = :ts");
+                Object.assign(attributeValues, { ":id": value, ":ts": Date.now() });
+                break;
+            case "projectKey":
+                expression.push("projectKey = :pk");
+                Object.assign(attributeValues, { ":pk": value });
+                break;
+            default:
+                throw new Error("Argument 'object' is incorrect in 'updateChannelContext' function of DBService.js");
+        }
+    });
 
-    // params can be changed to update
-    if (valueType === "projectKey"){
-        expression = "set projectKey = :pk";
-        attributeValues= {":pk": value};
-    }
 	const params = {
 		TableName: channelContextTableName,
 		Key: {
 		    channel: channel
 		},
-		UpdateExpression: expression,
+		UpdateExpression: `set ${expression.join(',')}`,
 		ExpressionAttributeValues: attributeValues
 	};
 

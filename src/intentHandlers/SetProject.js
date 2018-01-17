@@ -10,7 +10,7 @@ module.exports.process = async ((event, token, entities) => {
     if (entities.length != 0){
         projectKey = entities[0].entity.toUpperCase();
     }else{
-        throw new Error("Error *Setting Project* because Luis couldn't find an entity");
+        throw new Error("Error *Setting Project* because Luis couldn't find a project key");
     }
 
     // Call JIRA to make sure projectKey is a valid JIRA project
@@ -19,7 +19,7 @@ module.exports.process = async ((event, token, entities) => {
 
     // set the project key for the channel
     console.log("Storing: " + projectKey);
-    await (DBService.updateChannelContext(event.channel, projectKey, "projectKey")
+    await (DBService.updateChannelContext(event.channel, { "projectKey" : projectKey })
         .catch(error => {throw new Error(`Failed to store project key for channel context: ${error}`)}));
 
     // construct the response to be sent to Slack

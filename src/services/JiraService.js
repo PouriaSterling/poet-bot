@@ -68,10 +68,10 @@ module.exports.projectInfo = (projectKey) => {
 
 // Given a JIRA issueID as input, return it as a Slack hyperlink
 module.exports.HyperlinkJiraIssueID = (issueID) => {
-    return `<${process.env.JIRA_URL}/browse/${issueID}|${issueID}>`
+    return `<${jiraDetails.url}/browse/${issueID}|${issueID}>`
 };
 
 // Given a JIRA issueID as input, return it as a Slack hyperlink
 module.exports.HyperlinkJiraProjectKey = (projectKey, text) => {
-    return `<${process.env.JIRA_URL}/projects/${projectKey}/summary|${text}>`
+    return `<${jiraDetails.url}/projects/${projectKey}/summary|${text}>`
 };

@@ -21,7 +21,7 @@ module.exports.maintainContextIssueID = async ((message, channel) => {
             // store valid issueIDs in the database
             if (issueExists){
                 console.log("STORING: " + matches[i]);
-                await (DBService.updateChannelContext(channel, matches[i].toUpperCase(), "issueID")
+                await (DBService.updateChannelContext(channel, { issueID: matches[i].toUpperCase() })
                    .catch(error => console.log(`Failed to store jiraIssueID for context: ${error}`)));
                break;
            }
