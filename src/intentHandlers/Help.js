@@ -41,7 +41,7 @@ module.exports.process = (event, token) => {
                     "short": true
                 },
                 {
-                    "value": "_\"What's JIRA_USERNAME working on?\"_",
+                    "value": "_\"What's (Pouria Sterling || @pxsterling || pxsterling) working on?\"_",
                     "short": true
                 },
                 {
@@ -50,6 +50,22 @@ module.exports.process = (event, token) => {
                 },
                 {
                     "value": "_\"Show me Resolved issues\"_",
+                    "short": true
+                },
+                {
+                    "value": "Set the JIRA project for current Slack channel",
+                    "short": true
+                },
+                {
+                    "value": "_\"Set the project to POET\"_",
+                    "short": true
+                },
+                {
+                    "value": "Description of Slack channel's associated JIRA project",
+                    "short": true
+                },
+                {
+                    "value": "_\"Describe this project\"_",
                     "short": true
                 }
             ],

@@ -4,7 +4,7 @@ const SlackService = require('./SlackService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
-module.exports.maintainContext = async ((message, channel) => {
+module.exports.maintainContextIssueID = async ((message, channel) => {
     // Collect all regex matches in an array
     var matches = message.match(/\w+-\d+/g);
     if (matches){
@@ -21,7 +21,7 @@ module.exports.maintainContext = async ((message, channel) => {
             // store valid issueIDs in the database
             if (issueExists){
                 console.log("STORING: " + matches[i]);
-                await (DBService.storeJiraIssueID(matches[i].toUpperCase(), channel)
+                await (DBService.updateChannelContext(channel, { issueID: matches[i].toUpperCase() })
                    .catch(error => console.log(`Failed to store jiraIssueID for context: ${error}`)));
                break;
            }
@@ -35,12 +35,12 @@ module.exports.fetchContextIssue = (event, token) => {
     // are not considered relevant and are not used.
     const timeout = 86400000;
 
-    return DBService.retrieveJiraIssueID(event.channel)
-        .then(ContextIssueID => {
-            if (ContextIssueID){
-                console.log(`Context issue: ${ContextIssueID.issueID} @${ContextIssueID.timestamp}`);
-                if (ContextIssueID.timestamp + timeout > Date.now()){
-                    return ContextIssueID.issueID;
+    return DBService.retrieveChannelContext(event.channel)
+        .then(DBReponse => {
+            if (DBReponse){
+                console.log(`Context issue: ${DBReponse.issueID} @${DBReponse.issueIDtimestamp}`);
+                if (DBReponse.issueIDtimestamp + timeout > Date.now()){
+                    return DBReponse.issueID;
                 }else{
                     return "tooOld";
                 }

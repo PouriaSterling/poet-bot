@@ -39,7 +39,7 @@ module.exports.authorized = (event, context, callback) => {
 		response.on('data', chunk => body += chunk);
 		response.on('end', () => {
 			const jsonBody = JSON.parse(body);
-			DBService.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token, jsonBody.access_token)
+			DBService.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token)
 				.catch(error => console.log(error));
 		});
 	});
@@ -72,6 +72,9 @@ module.exports.receptionist = (event, context, callback) => {
         timeoutRetry = true;
     }
 
+    const response = {
+        statusCode: 200
+    };
     if (jsonBody.type === 'url_verification'){
         response.headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -97,13 +100,10 @@ module.exports.receptionist = (event, context, callback) => {
     } else if (!timeoutRetry) {
         // ignore bot messages
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
-            ContextService.maintainContext(jsonBody.event.text, jsonBody.event.channel);
+            ContextService.maintainContextIssueID(jsonBody.event.text, jsonBody.event.channel);
         }
     }
 
-    const response = {
-        statusCode: 200
-    };
     callback(null, response);
 };
 

@@ -54,11 +54,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
   * Leave your 'botId' fields empty for now, we will configure them after you've created your bot.
   * Do not commit this file. It is already Git ignored.
 
-* Deploy the server to AWS Lambda:
-
-	```
-	serverless deploy
-	```
+* Deploy the server to AWS Lambda `serverless deploy` or a shorter form `sls deploy`
 
   Make a note of the endpoints output once it has deployed, e.g.:
 
@@ -90,6 +86,8 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
   * Send a message mentioning the bot using `@YOUR_BOT_NAME`, then hovering your mouse over the blue highlighted name should display a link in the bottom left corner of your browser. The ID is after the last forward slash.
   * If the above doesnt work, you can right click on the blue highlighted name and select `inspect`. You will find the botID at the end of the `href` attribute
   * *Note:* Deleting or re-adding the bot will cause this ID to change.
+
+* Deploy your changes using `sls deploy`
 
 * You're all set to start asking your bot about JIRA! Start by greeting the bot or asking for help.
 
