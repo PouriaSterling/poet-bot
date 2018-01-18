@@ -57,8 +57,14 @@ module.exports.authorized = (event, context, callback) => {
 // or passes request onto event Lambda and immediately returns
 // a HTTP 200 response.
 module.exports.receptionist = (event, context, callback) => {
+    // interactive Slack messages are URL encoded so they need to be decoded in the event body before parsing
+    event.body = event.body.startsWith("payload") ? decodeURIComponent(event.body.substring(8)) : event.body;
     const jsonBody = JSON.parse(event.body);
-    if (jsonBody.type !== 'url_verification'){
+
+    // print debugging information to AWS Cloudwatch
+    if (jsonBody.type === "interactive_message"){
+        console.log("All: " + JSON.stringify(jsonBody));
+    }else if (jsonBody.type !== 'url_verification'){
         console.log("Text: " + JSON.stringify(jsonBody.event.text));
         console.log("Event: " + JSON.stringify(jsonBody.event));
         console.log("All: " + JSON.stringify(jsonBody));
@@ -80,8 +86,8 @@ module.exports.receptionist = (event, context, callback) => {
             'Content-Type': 'application/x-www-form-urlencoded'
         };
         response.body = jsonBody.challenge;
-    // only respond to tags and ignore http_timeout retries
-    } else if (jsonBody.event.text.includes(`@${client.botID}`) && !timeoutRetry){
+    // respond to bot mentions and interactive message callbacks from Slack. Ignore http_timeout retries
+    } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) ) && !timeoutRetry){
         // asynchronously call event Lambda
         lambda.invoke({
             FunctionName: 'poet-bot-dev-event',
@@ -110,11 +116,10 @@ module.exports.receptionist = (event, context, callback) => {
 // event Lambda calls Luis and palms execution off to intended intent handler
 module.exports.event = async ((event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
-
     if (jsonBody.type === 'event_callback'){
+        // retrieve the bot access token from the DynamoDB
         const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team_id)
             .catch(error => console.log(error)));
-
     	if (jsonBody.event.type === 'message'){
             // ignore ourselves
             if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
@@ -127,6 +132,11 @@ module.exports.event = async ((event, context, callback) => {
                 handleIntent(response, jsonBody.event, botAccessToken);
             }
     	}
+	}else if (jsonBody.type === 'interactive_message'){
+	    // retrieve the bot access token from the DynamoDB
+	    const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team.id)
+            .catch(error => console.log(error)));
+        handleInteractiveCallbacks(jsonBody, botAccessToken);
 	}
 });
 
@@ -135,20 +145,34 @@ const handleIntent = async ((response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     // catch LUIS call errors
     if (response.statusCode >= 300){
-        SlackService.postError(`Luis Error: ${response.statusCode} - ${response.message}`, event, token);
+        SlackService.postError(`Luis Error: ${response.statusCode} - ${response.message}`, event.channel, token);
         return;
     }
 
     const intent = response.topScoringIntent.intent;
 
-    // hand off execution to intended JIRA handler and handle missing entity errors
+    // hand off execution to intended handler and handle missing entity errors
     if (intent in IntentHandlers){
         try{
             await (IntentHandlers[intent].process(event, token, response.entities));
         }catch(error){
-            SlackService.postError(error.message, event, token);
+            SlackService.postError(error.message, event.channel, token);
         }
     }else{
-        SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer! :raised_hand_with_fingers_splayed: ", event, token);
+        SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer (into action)! :raised_hand_with_fingers_splayed: ", event.channel, token);
     }
 });
+
+const handleInteractiveCallbacks = (event, token) => {
+    console.log(`interactive callback for ${event.callback_id}`);
+    // hand off execution to intended handler
+    if (event.callback_id in IntentHandlers){
+        try{
+            await (IntentHandlers[event.callback_id].interactiveCallback(event, token));
+        }catch(error){
+            SlackService.postError(error.message, event.channel.id, token);
+        }
+    }else{
+        SlackService.postError(`Interactive callback incorrectly configured. '${event.callback_id}' does not exist in 'IntentHandlers'`, event.channel.id, token);
+    }
+};

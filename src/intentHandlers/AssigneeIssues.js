@@ -77,7 +77,7 @@ module.exports.process = async ((event, token, entities) => {
         text += " is not currently working on any issues";
     }
 
-    SlackService.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event.channel, text, attachments, token);
 });
 
 const callJira = (jql) => {

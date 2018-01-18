@@ -34,5 +34,5 @@ module.exports.process = async ((event, token) => {
             "mrkdwn_in": ["text"]
         }
     ];
-    SlackService.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event.channel, text, attachments, token);
 });

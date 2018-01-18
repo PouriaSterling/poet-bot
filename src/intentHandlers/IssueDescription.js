@@ -11,7 +11,7 @@ module.exports.process = async ((event, token, entities) => {
     if (entities.length != 0){
         issueID = entities[0].entity;
     }else{
-        issueID = await (ContextService.fetchContextIssue(event, token)
+        issueID = await (ContextService.fetchContextIssue(event.channel, token)
             .catch(error => {throw new Error("Error fetching context issue for *Issue Description*:\n" + error.message)}));
         if (issueID === "none" || issueID === "tooOld"){
             throw new Error("Error fetching *Issue Description* because Luis couldn't find an entity and no issue has been recently discussed");
@@ -59,5 +59,5 @@ module.exports.process = async ((event, token, entities) => {
             "mrkdwn_in": ["text"]
         },
     ];
-    SlackService.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event.channel, text, attachments, token);
 });
