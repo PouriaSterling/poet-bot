@@ -62,5 +62,5 @@ module.exports.process = (event, token) => {
             "color": "#32c8c8"
         }
     ];
-    SlackService.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event.channel, text, attachments, token);
 };

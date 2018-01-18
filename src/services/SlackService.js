@@ -4,17 +4,17 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
 // post a message to Slack
-module.exports.postMessage = (event, text, attachments, token) => {
+module.exports.postMessage = (channel, text, attachments, token) => {
     const web = new WebClient(token);
-    web.chat.postMessage(event.channel, text, {
+    web.chat.postMessage(channel, text, {
         attachments: JSON.stringify(attachments)
     })
         .catch(error => console.log(`Error posting Slack message: ${error}`));
 };
 
 // post an error message to Slack. Function provides consistent error reporting
-module.exports.postError = (errorMessage, event, token) => {
-    module.exports.postMessage(event, "Whoops :cry:",
+module.exports.postError = (errorMessage, channel, token) => {
+    module.exports.postMessage(channel, "Whoops :cry:",
         [
             {
                 "text": errorMessage,
@@ -23,6 +23,14 @@ module.exports.postError = (errorMessage, event, token) => {
             }
         ],
         token);
+};
+
+module.exports.updateMessage = (channel, text, attachments, token, timestamp) => {
+    const web = new WebClient(token);
+    web.chat.update(timestamp, channel, text, {
+        attachments: JSON.stringify(attachments)
+    })
+        .catch(error => console.log(`Error updating Slack message: ${error}`));
 };
 
 // Query Slack for list of users, search for the 'target' and return their

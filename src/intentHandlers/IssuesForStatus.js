@@ -51,5 +51,5 @@ module.exports.process = async ((event, token, entities) => {
         text += `no issues with status *${status.toUpperCase()}*`;
     }
 
-    SlackService.postMessage(event, text, attachments, token);
+    SlackService.postMessage(event.channel, text, attachments, token);
 });

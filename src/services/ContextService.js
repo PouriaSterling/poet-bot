@@ -29,13 +29,13 @@ module.exports.maintainContextIssueID = async ((message, channel) => {
     }
 });
 
-module.exports.fetchContextIssue = (event, token) => {
+module.exports.fetchContextIssue = (channel, token) => {
     console.log('Fetching...');
     // 1 day expressed as milliseconds. Issues in DB older than 1 day
     // are not considered relevant and are not used.
     const timeout = 86400000;
 
-    return DBService.retrieveChannelContext(event.channel)
+    return DBService.retrieveChannelContext(channel)
         .then(DBReponse => {
             if (DBReponse){
                 console.log(`Context issue: ${DBReponse.issueID} @${DBReponse.issueIDtimestamp}`);
