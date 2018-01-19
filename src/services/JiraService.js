@@ -6,7 +6,9 @@ const jiraDetails = {
 	url: process.env.JIRA_URL,
 	issue_endpoint: process.env.JIRA_ISSUE_ENDPOINT,
 	search_endpoint: process.env.JIRA_SEARCH_ENDPOINT,
-	project_endpoint: process.env.JIRA_PROJECT_ENDPOINT
+	project_endpoint: process.env.JIRA_PROJECT_ENDPOINT,
+	board_endpoint: process.env.JIRA_BOARD_ENDPOINT,
+	rapidview_endpoint: process.env.JIRA_RAPIDVIEW_CONFIG_ENDPOINT
 };
 
 // search the JIRA API using an issueID and return the response or throw and error
@@ -66,12 +68,48 @@ module.exports.projectInfo = (projectKey) => {
     });
 };
 
+// get kanban board information using JIRA Agile APIs
+module.exports.boardInfo = (query) => {
+    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.board_endpoint + query);
+    return axios.get(jiraDetails.url + jiraDetails.board_endpoint + query, {
+        auth: {
+            username: jiraDetails.name,
+            password: jiraDetails.password
+        }
+    })
+    .then(response => {
+        return response.data;
+    })
+    .catch(error => {
+        console.log("Jira Error: " + error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages']);
+    });
+};
+
+// get Rapidview config info for a kanban board from GreenHopper API
+module.exports.rapidViewConfigInfo = (id) => {
+    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.rapidview_endpoint + id);
+    return axios.get(jiraDetails.url + jiraDetails.rapidview_endpoint + id, {
+        auth: {
+            username: jiraDetails.name,
+            password: jiraDetails.password
+        }
+    })
+    .then(response => {
+        return response.data;
+    })
+    .catch(error => {
+        console.log("Jira Error: " + error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages']);
+    });
+};
+
 // Given a JIRA issueID as input, return it as a Slack hyperlink
 module.exports.HyperlinkJiraIssueID = (issueID) => {
     return `<${jiraDetails.url}/browse/${issueID}|${issueID}>`
 };
 
-// Given a JIRA issueID as input, return it as a Slack hyperlink
+// Given a JIRA Project key and desired text, return it as a Slack formatted hyperlink to project summary
 module.exports.HyperlinkJiraProjectKey = (projectKey, text) => {
     return `<${jiraDetails.url}/projects/${projectKey}/summary|${text}>`
 };

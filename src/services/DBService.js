@@ -49,6 +49,10 @@ module.exports.updateChannelContext = (channel, object) => {
                 expression.push("projectKey = :pk");
                 Object.assign(attributeValues, { ":pk": value });
                 break;
+            case "kanbanBoardID":
+                expression.push("kanbanBoardID = :bid");
+                Object.assign(attributeValues, { ":bid": value });
+                break;
             default:
                 throw new Error("Argument 'object' is incorrect in 'updateChannelContext' function of DBService.js");
         }
