@@ -130,14 +130,6 @@ module.exports.event = async ((event, context, callback) => {
                     }));
 
                 handleIntent(response, jsonBody.event, botAccessToken);
-//                handleIntent({
-//                                 "query": "status of the project",
-//                                 "topScoringIntent": {
-//                                     "intent": "ProjectStatus",
-//                                     "score": 0.98761636
-//                                 },
-//                                 "entities": []
-//                             }, jsonBody.event, botAccessToken);
             }
     	}
 	}else if (jsonBody.type === 'interactive_message'){
