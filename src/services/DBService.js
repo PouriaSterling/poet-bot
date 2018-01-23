@@ -53,8 +53,20 @@ module.exports.updateChannelContext = (channel, object) => {
                 expression.push("kanbanBoardID = :bid");
                 Object.assign(attributeValues, { ":bid": value });
                 break;
+            case "newestTS":
+                expression.push("newestTS = :nts");
+                Object.assign(attributeValues, { ":nts": value });
+                break;
+            case "middleTS":
+                expression.push("middleTS = :mts");
+                Object.assign(attributeValues, { ":mts": value });
+                break;
+            case "oldestTS":
+                expression.push("oldestTS = :ots");
+                Object.assign(attributeValues, { ":ots": value });
+                break;
             default:
-                throw new Error("Argument 'object' is incorrect in 'updateChannelContext' function of DBService.js");
+                throw new Error(`Need to update switch statement with ${key} in 'updateChannelContext' function of DBService.js`);
         }
     });
 
@@ -80,7 +92,7 @@ module.exports.retrieveChannelContext = (channel) => {
 		Key: {
 			channel: channel
 		},
-		AttributesToGet: ["issueID", "issueIDtimestamp", "projectKey"]
+		AttributesToGet: ["issueID", "issueIDtimestamp", "projectKey", "newestTS", "middleTS", "oldestTS"]
 	};
 
 	return new Promise((resolve, reject) => {

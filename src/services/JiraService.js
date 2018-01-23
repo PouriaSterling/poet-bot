@@ -8,7 +8,8 @@ const jiraDetails = {
 	search_endpoint: process.env.JIRA_SEARCH_ENDPOINT,
 	project_endpoint: process.env.JIRA_PROJECT_ENDPOINT,
 	board_endpoint: process.env.JIRA_BOARD_ENDPOINT,
-	rapidview_endpoint: process.env.JIRA_RAPIDVIEW_CONFIG_ENDPOINT
+	rapidview_endpoint: process.env.JIRA_RAPIDVIEW_CONFIG_ENDPOINT,
+	report_endpoint: process.env.JIRA_REPORT_INFO_ENDPOINT
 };
 
 // search the JIRA API using an issueID and return the response or throw and error
@@ -90,6 +91,24 @@ module.exports.boardInfo = (query) => {
 module.exports.rapidViewConfigInfo = (id) => {
     console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.rapidview_endpoint + id);
     return axios.get(jiraDetails.url + jiraDetails.rapidview_endpoint + id, {
+        auth: {
+            username: jiraDetails.name,
+            password: jiraDetails.password
+        }
+    })
+    .then(response => {
+        return response.data;
+    })
+    .catch(error => {
+        console.log("Jira Error: " + error.response.data['errorMessages']);
+        throw new Error(error.response.data['errorMessages']);
+    });
+};
+
+// get report information from JIRA for control chart and cumulative flow diagram
+module.exports.reportsInfo = (id) => {
+    console.log('JIRA URL: ' + jiraDetails.url + jiraDetails.report_endpoint + id);
+    return axios.get(jiraDetails.url + jiraDetails.report_endpoint + id, {
         auth: {
             username: jiraDetails.name,
             password: jiraDetails.password

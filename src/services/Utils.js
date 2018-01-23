@@ -4,7 +4,11 @@ const Moment = require('moment');
 // 'friendly time' (e.g. a few seconds ago, 2 days ago)
 module.exports.timeFromNow = (date) => {
     return Moment(date).fromNow();
-}
+};
+
+module.exports.todaysDate = () => {
+    return Moment().format('YYYY/MM/DD');
+};
 
 // HTTP template with embedded Slack install link for this bot
 module.exports.installHTML = (clientId) =>
