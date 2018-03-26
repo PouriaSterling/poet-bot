@@ -10,7 +10,7 @@ module.exports.process = async ((event, token) => {
     const ContextResponse = await (DBService.retrieveChannelContext(event.channel)
         .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
 
-    if (!ContextResponse){
+    if (!ContextResponse || !ContextResponse.projectKey){
         throw new Error("No channel project has been set yet, set one using e.g. '@poet Set the project to POET'");
     }
 
