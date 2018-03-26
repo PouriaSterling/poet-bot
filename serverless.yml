@@ -25,6 +25,9 @@ provider:
     JIRA_ISSUE_ENDPOINT: "/rest/api/latest/issue/"
     JIRA_SEARCH_ENDPOINT: "/rest/api/latest/search/"
     JIRA_PROJECT_ENDPOINT: "/rest/api/latest/project/"
+    JIRA_BOARD_ENDPOINT: "/rest/agile/latest/board/"
+    JIRA_RAPIDVIEW_CONFIG_ENDPOINT: "/rest/greenhopper/1.0/rapidviewconfig/editmodel.json?rapidViewId="
+    JIRA_REPORT_INFO_ENDPOINT: "/rest/greenhopper/1.0/rapid/charts/controlchart.json?rapidViewId="
   iamRoleStatements:
     - Effect: Allow
       Action:

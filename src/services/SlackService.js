@@ -4,13 +4,13 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
 // post a message to Slack
-module.exports.postMessage = (channel, text, attachments, token) => {
+module.exports.postMessage = async ((channel, text, attachments, token) => {
     const web = new WebClient(token);
-    web.chat.postMessage(channel, text, {
+    await (web.chat.postMessage(channel, text, {
         attachments: JSON.stringify(attachments)
     })
-        .catch(error => console.log(`Error posting Slack message: ${error}`));
-};
+        .catch(error => console.log(`Error posting Slack message: ${error}`)));
+});
 
 // post an error message to Slack. Function provides consistent error reporting
 module.exports.postError = (errorMessage, channel, token) => {
