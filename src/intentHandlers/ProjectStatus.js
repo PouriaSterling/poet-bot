@@ -184,7 +184,7 @@ const reportChecks = async ((projectKey, kanbanBoardID) => {
 // given board and status IDs and a potential subquery, query JIRA and return a list of issues not updated in the last week
 const notUpdated = async ((kanbanBoardID, StatusIDs, subQuery = '') => {
     var notUpdated = [];
-    notUpdatedRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and updatedDate <= -1w ${subQuery} ORDER BY updated ASC`)
+    notUpdatedRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and updatedDate <= -1w ${subQuery} and resolution is EMPTY ORDER BY updated ASC`)
        .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)}));
     const total = notUpdatedRecentlyIssues.total;
     if (total > 0){
@@ -205,16 +205,16 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
     var lastCheck;
     if (!middleTS){
         // show issues created in the last week
-        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate >= -1w ${subQuery} ORDER BY created DESC`)
+        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate >= -1w ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
             .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)}));
         lastCheck = "a week ago";
     }else{
         // query JIRA for issues created since the last check (i.e. since middleTS)
-        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${middleTS}" ${subQuery} ORDER BY created DESC`)
+        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
             .catch(error => {throw new Error(`error getting backlogIssues 2: ${error}`)}));
         if (oldestTS){
             // remind the user about which newly created tickets were shown last time
-            createdPreviouslyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${oldestTS}" and createdDate<"${middleTS}" ${subQuery} ORDER BY created DESC`)
+            createdPreviouslyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${oldestTS}" and createdDate<"${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
                 .catch(error => {throw new Error(`error getting backlogIssues 3: ${error}`)}));
         }
         lastCheck = Utils.timeFromNow(middleTS);
