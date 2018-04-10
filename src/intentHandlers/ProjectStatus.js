@@ -96,15 +96,21 @@ module.exports.process = async ((event, token, entities) => {
             var reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
             await (SlackService.postMessage(event.channel, 'Report Checks:', reportCheckResults, token));
             break;
+        case 'unreleased':
+            var ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
+            await (SlackService.postMessage(event.channel, 'Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token));
+            break;
         case 'all':
             // do all checks
             kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery));
             backlogCheckResults = await (backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS));
             reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
+            ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
             // Send the results to Slack in order
             await (SlackService.postMessage(event.channel, ':one: Kanban Checks:', kanbanCheckResults, token));
             await (SlackService.postMessage(event.channel, ':two: Backlog Checks:', backlogCheckResults, token));
             await (SlackService.postMessage(event.channel, ':three: Report Checks:', reportCheckResults, token));
+            await (SlackService.postMessage(event.channel, ':four: Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token));
             break;
         default:
             throw new Error(`${checksToGet} is not a check type. Please specify either 'kanban', 'backlog' or 'report'.`);
@@ -179,6 +185,18 @@ const reportChecks = async ((projectKey, kanbanBoardID) => {
         reportChecks.push({"text": 'Reports are all good! :white_check_mark:' , "color": "good"});
     }
     return reportChecks;
+});
+
+const findTicketsAwaitingRelease = async ((projectKey, kanbanBoardID) => {
+    let ticketsAwaitingRelease = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution in (Done, Fixed) ORDER BY updated ASC`)
+        .catch(error => {throw new Error(`Error finding tickets awaiting release on kanban board ${kanbanBoardID}: ${error}`)}));
+
+    const total = ticketsAwaitingRelease.total;
+    return [{
+        "text": `:exclamation: There are ${total > 0 ? total : 'no'} tickets awaiting release. ${returnIssues(ticketsAwaitingRelease)}`,
+        "color": "danger",
+        "mrkdwn_in": ["text"],
+    }];
 });
 
 // given board and status IDs and a potential subquery, query JIRA and return a list of issues not updated in the last week
