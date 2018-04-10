@@ -15,6 +15,8 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 * run `npm install`
 * [Create an AWS account](https://aws.amazon.com/free/) if haven't got one already
 * [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://www.youtube.com/watch?v=mRkUnA3mEt4).
+* [Create a Luis app](https://www.luis.ai/home) for the bot
+* At Luis -> Settings, import training data from the file poet-bot/data/LuisTrainingData.json, and then Train on that data
 * [Create your Slack app](https://api.slack.com/slack-apps#create-app) and configure its credentials as well as those for Luis and JIRA by creating a `local.yml` file:
 
 	```
