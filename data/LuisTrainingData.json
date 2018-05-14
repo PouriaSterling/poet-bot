@@ -1,0 +1,2081 @@
+{
+  "luis_schema_version": "2.2.0",
+  "versionId": "0.2",
+  "name": "Poet",
+  "desc": "Slack bot that can understand and interpret natural language",
+  "culture": "en-us",
+  "intents": [
+    {
+      "name": "AllQuestions"
+    },
+    {
+      "name": "AssigneeIssues"
+    },
+    {
+      "name": "Greeting"
+    },
+    {
+      "name": "Help"
+    },
+    {
+      "name": "IssueAssignee"
+    },
+    {
+      "name": "IssueDescription"
+    },
+    {
+      "name": "IssuesForStatus"
+    },
+    {
+      "name": "IssueStatus"
+    },
+    {
+      "name": "None"
+    },
+    {
+      "name": "ProjectDescription"
+    },
+    {
+      "name": "ProjectStatus"
+    },
+    {
+      "name": "SetProject"
+    }
+  ],
+  "entities": [
+    {
+      "name": "FullName"
+    },
+    {
+      "name": "IssueID"
+    },
+    {
+      "name": "IssueStatus"
+    },
+    {
+      "name": "JiraUsername"
+    },
+    {
+      "name": "Mention"
+    },
+    {
+      "name": "ProjectKey"
+    },
+    {
+      "name": "Self"
+    },
+    {
+      "name": "StatusOf"
+    }
+  ],
+  "composites": [],
+  "closedLists": [],
+  "regex_entities": [],
+  "bing_entities": [],
+  "model_features": [
+    {
+      "name": "JiraUsername",
+      "mode": true,
+      "words": "danixon,dmelliot,dxspasojevic,hljiang,jjsmith,jshughes,mirankin,mjgrace,pxsterling,rebishop,rmstokes,tjstasse,hxnizamani,japearson,sdde,ssperret",
+      "activated": true
+    },
+    {
+      "name": "FullName",
+      "mode": true,
+      "words": "Pouria Sterling,Rory Stokes,Justin Smith,David Elliot,Amy O ' Rourke,Sean Dawson,Daniel Nixon,Dan Spasojevic,Eric Heath,Finn Blucher,Haolin Jiang,Hasan Nizamani,Joel Pearson,Jonathan Mikkila,Matt Rankin,Meaghan Grace,Olivia Argy,Ruth Bishop,Rish Ratnam,Sayan De,Sam Perret,Tim Stasse,Jacob S Hughes,Jacob Hughes",
+      "activated": true
+    },
+    {
+      "name": "IssueStatus",
+      "mode": true,
+      "words": "Closed,ready for sub task,estimating,ready,stalled implementation,resolved,being tested,reopened,in progress,stalled testing,stalled office,ready for kanban,open",
+      "activated": true
+    },
+    {
+      "name": "ProjectKey",
+      "mode": true,
+      "words": "ACTHOC,ADC,AGILE,ADETKANBAN,ADE,STAFF,APEC,BD,CITYART,DEC,ICC,DENPI,COMSYS,HEALTHPOC,IPAB,QFXMVVP,MF,POET,PV,QFXMV,RND,RTS,SEDB,SEMCP,SIPHTIT,TEST",
+      "activated": true
+    },
+    {
+      "name": "Ticket/Issue",
+      "mode": true,
+      "words": "issue,ticket",
+      "activated": true
+    },
+    {
+      "name": "Health/Status",
+      "mode": true,
+      "words": "health,status",
+      "activated": true
+    },
+    {
+      "name": "StatusOfs",
+      "mode": true,
+      "words": "backlog,kanban,report,unreleased",
+      "activated": true
+    }
+  ],
+  "regex_features": [
+    {
+      "name": "Issue name/number",
+      "pattern": "[A-Za-z]+-\\d+",
+      "activated": true
+    },
+    {
+      "name": "Jira username",
+      "pattern": "[A-Za-z]x[A-Za-z]+",
+      "activated": true
+    }
+  ],
+  "utterances": [
+    {
+      "text": "@u8fssadnc hey",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "<@u8e867w5d> hello/",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "a",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "agian",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "alright give me your worst",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "alright, do your worth",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "and again",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "and now!?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "and one more time?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "any errors?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "b",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "backlog status of the project",
+      "intent": "ProjectStatus",
+      "entities": [
+        {
+          "entity": "StatusOf",
+          "startPos": 0,
+          "endPos": 6
+        }
+      ]
+    },
+    {
+      "text": "broken right",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "bye",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "c",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "closed issues",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 0,
+          "endPos": 5
+        }
+      ]
+    },
+    {
+      "text": "cmon now surely please!?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "dagdggsgdgggd",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "describe",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "describe fish",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "describe ipasip-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 16
+        }
+      ]
+    },
+    {
+      "text": "describe ir-4",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 12
+        }
+      ]
+    },
+    {
+      "text": "describe me",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "describe poet-34",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-40",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-5",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "describe poet-58",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-60",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-63",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-64",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-66",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-70",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe poet-72",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe rts-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 13
+        }
+      ]
+    },
+    {
+      "text": "describe rts-4",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 13
+        }
+      ]
+    },
+    {
+      "text": "describe staff 3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe staff-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "describe that for me",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "describe that issue",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "describe that issue for me",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "describe the meaning of life",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "describe the previous issue",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "describe the project",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "describe this project",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "description of life please",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "description of poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 15,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "description of poet-64",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 15,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "description of staff-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 15,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "did i fix you?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "do it",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "dsg",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "frick yeah man!",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "gimmie something beeto",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "give me all saved questions please",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "give me all the questions",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "give me that issue's description",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "give me the list of questions",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "give me the project summary",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "give me the saved data",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "give me the status of poet-62",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "health of the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "hello",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "hello world",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "hello/",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "hello?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "hellow",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "help",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "help me",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "hey",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "hey there",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "hi",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "hi there",
+      "intent": "Greeting",
+      "entities": []
+    },
+    {
+      "text": "hit me",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "how about now?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "how is the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "how to use",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "hows the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "how's the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "hows the project backlog",
+      "intent": "ProjectStatus",
+      "entities": [
+        {
+          "entity": "StatusOf",
+          "startPos": 17,
+          "endPos": 23
+        }
+      ]
+    },
+    {
+      "text": "how's the project backlog",
+      "intent": "ProjectStatus",
+      "entities": [
+        {
+          "entity": "StatusOf",
+          "startPos": 18,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "hows the project going",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "how's the project going",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "i knew it",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "i want to know about poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 21,
+          "endPos": 27
+        }
+      ]
+    },
+    {
+      "text": "i want to know about rts-2",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 21,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "in-progress issues please",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 0,
+          "endPos": 10
+        }
+      ]
+    },
+    {
+      "text": "instructions",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "issue",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "issue status of poet-25",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "kjdf",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "list all of the questions asked please",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "list all open issues",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 9,
+          "endPos": 12
+        }
+      ]
+    },
+    {
+      "text": "list all questions",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "list all reopened issues",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 9,
+          "endPos": 16
+        }
+      ]
+    },
+    {
+      "text": "list all saved data",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "list all saved data please",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "list all saved questions",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "moment of truth",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "now?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "o",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "ok please",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "person working on poet-62",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 18,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "pl",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "please",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "please describe staff-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 16,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "please!?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "pleases",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "poet is the channel project",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 0,
+          "endPos": 3
+        }
+      ]
+    },
+    {
+      "text": "poet is the project",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 0,
+          "endPos": 3
+        }
+      ]
+    },
+    {
+      "text": "poet usage",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "project health",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "project's health",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "pxsterling issues",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 0,
+          "endPos": 9
+        }
+      ]
+    },
+    {
+      "text": "rebishop issues",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 0,
+          "endPos": 7
+        }
+      ]
+    },
+    {
+      "text": "robot",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "rory is going to be mad",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "rory is here",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "saved questions",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "saved questions please",
+      "intent": "AllQuestions",
+      "entities": []
+    },
+    {
+      "text": "say something i'm giving up on you",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "sdf",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "send help",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "set poet as the project",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 4,
+          "endPos": 7
+        }
+      ]
+    },
+    {
+      "text": "set project to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 15,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "set rts1 as the project",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 4,
+          "endPos": 7
+        }
+      ]
+    },
+    {
+      "text": "set the channel project",
+      "intent": "SetProject",
+      "entities": []
+    },
+    {
+      "text": "set the channel project to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 27,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "set the project for this channel",
+      "intent": "SetProject",
+      "entities": []
+    },
+    {
+      "text": "set the project for this channel to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 36,
+          "endPos": 39
+        }
+      ]
+    },
+    {
+      "text": "set the project to abc",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 19,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "set the project to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 19,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "set the project to poets",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 19,
+          "endPos": 23
+        }
+      ]
+    },
+    {
+      "text": "set this channels project",
+      "intent": "SetProject",
+      "entities": []
+    },
+    {
+      "text": "set this channels project to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 29,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "set this channel's project to poet",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 30,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "show me",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "show me all completed issues",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 12,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "show me all in progress issues",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 12,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "show me all issues being tested",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 19,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "show me issues being worked on by <@u633kj9d3>",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Mention",
+          "startPos": 36,
+          "endPos": 44
+        }
+      ]
+    },
+    {
+      "text": "show me issues im working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 15,
+          "endPos": 16
+        }
+      ]
+    },
+    {
+      "text": "show me issues that are in progress",
+      "intent": "IssuesForStatus",
+      "entities": [
+        {
+          "entity": "IssueStatus",
+          "startPos": 24,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "show me my issues",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 8,
+          "endPos": 9
+        }
+      ]
+    },
+    {
+      "text": "show me the issues being worked on by jjsmith",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 38,
+          "endPos": 44
+        }
+      ]
+    },
+    {
+      "text": "show me what i'm working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 13,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "show me what pxsterling is working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 13,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "show me what you got",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "skjhxzljfdlkjf;dljfaedg",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "sup",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "surely now",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "tell me about poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 14,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "tell me about the health of the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "tell me about the project backlog",
+      "intent": "ProjectStatus",
+      "entities": [
+        {
+          "entity": "StatusOf",
+          "startPos": 26,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "tell me about the project tickets awaiting release",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "tell me how the project is going",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "tell me the assignee of poet-62",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 24,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "tell me the health of the project",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "that's enough",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "the assignee of poet-62",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 16,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "this channel's project is kkdjf",
+      "intent": "SetProject",
+      "entities": [
+        {
+          "entity": "ProjectKey",
+          "startPos": 26,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "thoughts?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "try again",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "try again bud",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "try again sweety",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "usage",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "usage instructions",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "what am i up to?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 8,
+          "endPos": 8
+        }
+      ]
+    },
+    {
+      "text": "what am i working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 8,
+          "endPos": 8
+        }
+      ]
+    },
+    {
+      "text": "what are my issues?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Self",
+          "startPos": 9,
+          "endPos": 10
+        }
+      ]
+    },
+    {
+      "text": "what is <@u8dfj875s> up to?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Mention",
+          "startPos": 10,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "what is <@u9fjs73d9> working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Mention",
+          "startPos": 10,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "what is daniel nixon doing?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "what is daniel nixon working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "what is david elliot up to?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "what is issue poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 14,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "what is jacob hughes working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "what is ohs-15",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 8,
+          "endPos": 13
+        }
+      ]
+    },
+    {
+      "text": "what is poet-45",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 8,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "what is pouria sterling doing",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "what is pouria sterling up to",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 8,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "what is pxsterling up to?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 17
+        }
+      ]
+    },
+    {
+      "text": "what is pxsterling working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 17
+        }
+      ]
+    },
+    {
+      "text": "what is pxsterling working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 17
+        }
+      ]
+    },
+    {
+      "text": "what is rmstokes doing?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "what is rmstokes working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "what is rmstokes working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 8,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "what is the description for acthoc-127",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 28,
+          "endPos": 37
+        }
+      ]
+    },
+    {
+      "text": "what is the description for poet-64",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 28,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "what is the description for rts-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 28,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "what is the description for staff-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 28,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "what is the description of poet-62",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 27,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "what is the description of poet-72",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 27,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "what is the description of staff-3",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 27,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "what is the description of the previously mentioned issue?",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "what is the status of ipasip-3",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "what is the status of poet-1331313",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "what is the status of poet-5",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 27
+        }
+      ]
+    },
+    {
+      "text": "what is the status of poet-62",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "what is the status of poet-64",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "what is the status of poet-72",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "what is the status of rts-4",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 22,
+          "endPos": 26
+        }
+      ]
+    },
+    {
+      "text": "what is the status of that?",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "what is this project?",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "what issues is dmelliot working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "what issues is pouria working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "what issues is pxsterling working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "what issues is pxsterling working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "what issues is rmstokes working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "what issues is rmstokes working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 15,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "what issues is rory stokes working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 15,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "what the previously mentioned issues status?",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "what's <@uhd7df587> working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "Mention",
+          "startPos": 9,
+          "endPos": 17
+        }
+      ]
+    },
+    {
+      "text": "what's jshughes up to?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 7,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "what's jshughes working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 7,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "what's justin smith doing these days?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "FullName",
+          "startPos": 7,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "what's pxsterling working on?",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 7,
+          "endPos": 16
+        }
+      ]
+    },
+    {
+      "text": "what's rmstokes working on",
+      "intent": "AssigneeIssues",
+      "entities": [
+        {
+          "entity": "JiraUsername",
+          "startPos": 7,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "whats that issues status?",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "whats the description of poet-5",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 25,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "what's the description of poet-71",
+      "intent": "IssueDescription",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 26,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "whats the description of that issue?",
+      "intent": "IssueDescription",
+      "entities": []
+    },
+    {
+      "text": "what's the previous issue's status",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "whats the previous issues status?",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "whats the project",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "what's the project",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "what's the project status",
+      "intent": "ProjectStatus",
+      "entities": []
+    },
+    {
+      "text": "whats the status of ipasip-1024",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 20,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "what's the status of poet-64",
+      "intent": "IssueStatus",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 21,
+          "endPos": 27
+        }
+      ]
+    },
+    {
+      "text": "what's the status of that issue?",
+      "intent": "IssueStatus",
+      "entities": []
+    },
+    {
+      "text": "what's this project about?",
+      "intent": "ProjectDescription",
+      "entities": []
+    },
+    {
+      "text": "who is assigned to rts-5",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 19,
+          "endPos": 23
+        }
+      ]
+    },
+    {
+      "text": "who is assigned to that issue?",
+      "intent": "IssueAssignee",
+      "entities": []
+    },
+    {
+      "text": "who is the assignee of poet-62",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 23,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "who is the assignee of poet-62?",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 23,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "who is working on poet-62?",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 18,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "who is working on poet-71",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 18,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "who is working on poet-72",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 18,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "who is working on that issue?",
+      "intent": "IssueAssignee",
+      "entities": []
+    },
+    {
+      "text": "who's the assignee of that issue?",
+      "intent": "IssueAssignee",
+      "entities": []
+    },
+    {
+      "text": "who's working on poet-71",
+      "intent": "IssueAssignee",
+      "entities": [
+        {
+          "entity": "IssueID",
+          "startPos": 17,
+          "endPos": 23
+        }
+      ]
+    },
+    {
+      "text": "who's working on the issue",
+      "intent": "IssueAssignee",
+      "entities": []
+    },
+    {
+      "text": "why do you reply 3 times?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "wishfull thinking",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "work with me here",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "working?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "wot",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "zkjdf",
+      "intent": "None",
+      "entities": []
+    }
+  ]
+}

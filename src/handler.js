@@ -156,6 +156,7 @@ const handleIntent = async ((response, event, token) => {
         try{
             await (IntentHandlers[intent].process(event, token, response.entities));
         }catch(error){
+            console.log("handleIntent: " + error + error.stack);
             SlackService.postError(error.message, event.channel, token);
         }
     }else{
@@ -170,6 +171,7 @@ const handleInteractiveCallbacks = (event, token) => {
         try{
             await (IntentHandlers[event.callback_id].interactiveCallback(event, token));
         }catch(error){
+            console.log("handleInteractiveCallbacks: " + error + error.stack);
             SlackService.postError(error.message, event.channel.id, token);
         }
     }else{

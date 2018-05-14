@@ -1,0 +1,6 @@
+This folder contains some example payloads for simulating Slack messages sent to the system.
+They are meant as examples only, and are intended to demonstrate the general message structure.
+
+To send the askProjectStatus message, run this from the project root:
+   > serverless invoke local -f receptionist -p test/askProjectStatus.json
+
