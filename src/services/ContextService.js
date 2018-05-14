@@ -56,22 +56,20 @@ module.exports.fetchContextIssue = (channel, token) => {
 
 // given a projectKey, find the associated Kanban board
 module.exports.updateProjectKanbanBoardInfo = async ((projectKey, channel) => {
-    const allBoards = await (JiraService.boardInfo('?type=kanban')
+    const allBoards = await (JiraService.boardInfo(`?type=kanban&projectKeyOrId=${projectKey}`)
         .catch(error => {throw new Error(`Failed to get kanbanBoard info: ${error}`)}));
 
-    for (i = 0; i < allBoards.values.length; i++){
-        var board = await (JiraService.rapidViewConfigInfo(allBoards.values[i].id)
-            .catch(error => {throw new Error(`Failed to get rapidViewConfigInfo: ${error}`)}));
+    let boardId = 'notFound';
 
-        var projects = board.filterConfig.queryProjects.projects;
-        for (j = 0; j < projects.length; j++){
-            if (projects[j].key == projectKey){
-                const boardID = board.id;
-                await (DBService.updateChannelContext(channel, { kanbanBoardID: boardID })
-                   .catch(error => console.log(`Failed to store Kanban board ID for context: ${error}`)));
-                return boardID;
-            }
+    if (allBoards.values.length > 0) {
+        if (allBoards.values.length > 1) {
+            console.log(`updateProjectKanbanBoardInfo: found multiple boards for project ${projectKey}`);
+        }
+        if ('id' in allBoards.values[0]) {
+            boardId = allBoards.values[0].id;
+        } else {
+            console.log(`updateProjectKanbanBoardInfo: board had no id`);
         }
     }
-    return 'notFound';
+    return boardId;
 });

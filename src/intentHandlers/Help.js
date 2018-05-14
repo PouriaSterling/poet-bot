@@ -77,7 +77,7 @@ module.exports.process = (event, token) => {
             "color": "warning"
         },
         {
-            "text": "Make me smarter! Go <https://github.com/PouriaSterling/poet-bot#adding-functionality|here>",
+            "text": "Make me smarter! Go <https://github.com/agiledigital/poet-bot#adding-functionality|here>",
             "color": "warning"
         }
     ];
