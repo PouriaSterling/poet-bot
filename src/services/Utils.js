@@ -21,14 +21,11 @@ module.exports.verifyEnvVariablesExist = () => {
 					 "JIRA_REPORT_INFO_ENDPOINT"];
     const missingVars = [];
     envVars.forEach((variable) => {
-    	// console.log('variable: ' + variable + ', ' + process.env[variable] + ' = ' + (process.env[variable] == null) + '\n')
     	if (process.env[variable] == null){
     		missingVars.push(variable);
     	}
     });
     return missingVars;
-    // const temp = [];
-    // return temp;
 }
 
 // return how long ago the argument 'date' is from now in
