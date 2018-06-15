@@ -83,8 +83,11 @@ module.exports.receptionist = async ((event, context, callback) => {
         statusCode: 200
     };
 
+    // check the existence of all environment variables and report to console if any are missing
     const missingEnvVars = Utils.verifyEnvVariablesExist()
-    console.log('CHECK: ' + missingEnvVars.join(", "))
+    if (missingEnvVars.length > 0){
+        console.log(`Environment Variable Check failed, the following are missing in Receptionist Lambda.\n[${missingEnvVars.join(", ")}]`)
+    }
 
     // handle the event, ignoring all timeouts and bot messages
     if (!timeoutRetry && (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') ){
@@ -93,12 +96,6 @@ module.exports.receptionist = async ((event, context, callback) => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             };
             response.body = jsonBody.challenge;
-        // if environment variables are missing, report error to Slack and do not call Event handler
-        } else if (missingEnvVars.length > 0){
-            console.log(`Environment Variable Check failed, the following are missing in Receptionist Lambda.\n[${missingEnvVars.join(", ")}]`)
-            const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team_id)
-                .catch(error => console.log(error)));
-            SlackService.postError(`The following environment variables are missing in Receptionist Lambda. Message one of the developers in #poet-dev.\n[${missingEnvVars.join(", ")}]`, jsonBody.event.channel, botAccessToken);
         // respond to bot mentions and interactive message callbacks from Slack. Ignore http_timeout retries
         } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) )){
             // asynchronously call event Lambda
@@ -109,7 +106,6 @@ module.exports.receptionist = async ((event, context, callback) => {
                 }, function(error, data) {
                 if (error) {
                     console.log("Invoke error: " + error);
-                    // context.done('error', error);
                 }
                 if(data.Payload){
                     console.log("Invoke success: " + data.Payload);
@@ -134,7 +130,7 @@ module.exports.event = async ((event, context, callback) => {
             .catch(error => console.log(error)));
 
         const missingEnvVars = Utils.verifyEnvVariablesExist()
-        if (missingEnvVars > 0){
+        if (missingEnvVars.length > 0){
             console.log(`Environment Variable Check failed, the following are missing in Receptionist Lambda.\n[${missingEnvVars.join(", ")}]`)
             SlackService.postError(`The following environment variables are missing in Event Lambda. Message one of the developers in #poet-dev.\n[${missingEnvVars.join(", ")}]`, jsonBody.event.channel, botAccessToken);
         } else if (jsonBody.event.type === 'message'){
@@ -181,6 +177,7 @@ const handleIntent = async ((response, event, token) => {
     }
 });
 
+// handler for interactive callbacks from Slack (e.g. when users interact with buttons presented by Poet)
 const handleInteractiveCallbacks = (event, token) => {
     console.log(`interactive callback for ${event.callback_id}`);
     // hand off execution to intended handler

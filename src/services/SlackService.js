@@ -5,7 +5,6 @@ const await = require('asyncawait/await');
 
 // post a message to Slack
 module.exports.postMessage = async ((channel, text, attachments, token) => {
-    console.log(`Slack [postMessage]\nmsg: ${text}\nattachments: ${attachments}\nchannel: ${channel}\ntoken: ${token}`)
     const web = new WebClient(token);
     await (web.chat.postMessage(channel, text, {
         attachments: JSON.stringify(attachments)
