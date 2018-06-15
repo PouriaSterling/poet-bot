@@ -36,7 +36,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         password: "<Your Dev JIRA Password>"
         url: "<Your Dev JIRA Base URL>"
 
-	production:
+	prod:
 	  slack:
 	    clientId: "<Your Production Slack App Client ID>"
 	    clientSecret: <Your Production Slack App Client Secret>
@@ -106,6 +106,14 @@ sls offline start
 ```
 
 You can then send requests to `localhost:3000/<FUNCTION_NAME>`
+
+## Release Process
+
+When making changes to shared files such as `serverless.yml` or `local.yml`, ensure that you call `sls deploy` to avoid inconsistencies across the various lambda functions. Even if you are making changes to only a single Lambda function and you are using `sls deploy function -f <FUNCTION_NAME>`, it is good practice to do an `sls deploy` every now and then. from the [documentation](https://serverless.com/framework/docs/providers/aws/cli-reference/deploy-function/):
+```
+The 'sls deploy function' command deploys an individual function without AWS CloudFormation. 
+Note: This command now deploys both function configuration and code by default. Just as before, this puts your function in an inconsistent state that is out of sync with your CloudFormation stack. Use this for faster development cycles and not production deployments.
+```
 
 ## Adding Functionality
 
