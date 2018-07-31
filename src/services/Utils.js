@@ -19,13 +19,7 @@ module.exports.verifyEnvVariablesExist = () => {
 					 "JIRA_BOARD_ENDPOINT",
 					 "JIRA_RAPIDVIEW_CONFIG_ENDPOINT",
 					 "JIRA_REPORT_INFO_ENDPOINT"];
-    const missingVars = [];
-    envVars.forEach((variable) => {
-    	if (process.env[variable] == null){
-    		missingVars.push(variable);
-    	}
-    });
-    return missingVars;
+    return envVars.filter((variable) => process.env[variable] == null)
 }
 
 // return how long ago the argument 'date' is from now in
