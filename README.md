@@ -35,6 +35,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         name: "<Your Dev JIRA Username>"
         password: "<Your Dev JIRA Password>"
         url: "<Your Dev JIRA Base URL>"
+        storypoints: "<Your Production JIRA storypoints field name>"
 
 	production:
 	  slack:
@@ -49,6 +50,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         name: "<Your Production JIRA Username>"
         password: "<Your Production JIRA Password>"
         url: "<Your Production JIRA Base URL>"
+        storypoints: "<Your Production JIRA storypoints field name>"
 	```
 
   Notes:

@@ -7,6 +7,12 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
 module.exports.process = async ((event, token, entities) => {
+    const boardCon = await(JiraService.boardInfo(`122/configuration`)
+    .catch(error => { throw new Error(`error getting board/122/configuration: ${error}`) }));
+//    //console.log(await (redColumnCheck(122, boardCon)));
+    console.log(await (extendedEstimates(122, boardCon)));
+    return;
+
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
     if (entities.length != 0){
@@ -85,7 +91,7 @@ module.exports.process = async ((event, token, entities) => {
     await (SlackService.postMessage(event.channel, text, [{}], token));
     switch (checksToGet){
         case 'kanban':
-            var kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery));
+            var kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
             await (SlackService.postMessage(event.channel, 'Kanban Checks:', kanbanCheckResults, token));
             break;
         case 'backlog':
@@ -102,7 +108,7 @@ module.exports.process = async ((event, token, entities) => {
             break;
         case 'all':
             // do all checks
-            kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery));
+            kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
             backlogCheckResults = await (backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS));
             reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
             ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
@@ -118,7 +124,7 @@ module.exports.process = async ((event, token, entities) => {
 });
 
 // Check the project kanban board and return an array of objects consisting of the results
-const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery) => {
+const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery, boardConfig) => {
     var kanbanChecks = [];
     // list newly created tickets in the last week
     kanbanChecks = kanbanChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery)));
@@ -126,9 +132,9 @@ const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, old
     // list tickets not updated in last week. TODO highlight if in Stalled, In Progress or Completed
     kanbanChecks = kanbanChecks.concat(await (notUpdated(kanbanBoardID, StatusIDs, boardSubQuery)));
 
-    // TODO report if more than 1 ticket with story point > 3 is in the prioritised or scoped columns
+    kanbanChecks = kanbanChecks.concat(await (largeIssues(kanbanBoardID, boardConfig)))
 
-    // TODO report any red columns. Return the status and assignee of issue
+    kanbanChecks = kanbanChecks.concat(await (redColumnCheck(kanbanBoardID, boardConfig)));
 
     if (kanbanChecks.length == 0){
         kanbanChecks.push({"text": 'Kanban is all good! :white_check_mark:' , "color": "good"});
@@ -269,6 +275,118 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
     return newlyCreated;
 });
 
+// Checks if there are any red columns and returns array of objects consisting of the results
+const redColumnCheck = async((kanbanBoardID, boardConfig) => {
+    var redColumns = [];
+    const columns = boardConfig.columnConfig.columns;
+    for (let i = 0; i < columns.length; i++) {
+        var statusIDs = [];
+        for (j = 0; j < columns[i].statuses.length; j++) {
+            statusIDs.push(columns[i].statuses[j].id);
+        }
+        if (columns[i].name.toUpperCase() !== 'BACKLOG' && statusIDs != []) {
+            var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+                .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) })); 
+            if (jiraResponse.issues.length > columns[i].max){
+                redColumns.push({
+                    "text": `:exclamation: The ${columns[i].name} column is overflowing with the following issues:${returnIssuesWithAssignee(jiraResponse)}`,
+                    "color": "danger",
+                    "mrkdwn_in": ["text"]
+                });
+            }
+        }
+    }
+    if (redColumns.length == 0){
+        redColumns.push({
+            "text": `Kanban board Columns are all healthy! :white_check_mark:`,
+            "color":"good",
+            "mrkdwn_in": ["text"]
+        });
+    }
+    return redColumns;
+});
+
+// Checks the 'prioritised' or 'scoped' columns and return an array of objects consisting of the results
+const largeIssues = async((kanbanBoardID, boardConfig) => {
+    var largeProjects = [];
+    const columns = boardConfig.columnConfig.columns;
+    columnNames = [];
+    for (i = 0; i < columns.length; i++){
+        columnNames.push(columns[i].name.toUpperCase());
+    }
+    if (columnNames.includes("PRIORITISED")){
+        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('PRIORITISED')].statuses));
+        if (result !== '') {
+            largeProjects.push({
+                "text": `:exclamation: The prioritised column has the following tickets with story points > 3:${result}`,
+                "color": "danger",
+                "mrkdwn_in": ["text"]
+            });
+        }
+    } else {
+        largeProjects.push({
+            "text": `:warning: The project is missing a prioritised column`,
+            "color": "danger",
+            "mrkdwn_in": ["text"]
+        });
+    }
+
+    if (columnNames.includes("SCOPED")){
+        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('SCOPED')].statuses));
+        if (result !== '') {
+            largeProjects.push({
+               "text": `:exclamation: The scoped column has the following tickets with story points > 3:${result}`,
+                "color": "danger",
+                "mrkdwn_in": ["text"]
+            });
+        }
+    } else {
+        largeProjects.push({
+            "text": `:warning: The project is missing a scoped column`,
+            "color": "danger",
+            "mrkdwn_in": ["text"]
+        });
+    }
+    return largeProjects;
+});
+
+// Returns issues that have storypoints > 3 IF there is more than one of them
+const returnLargeIssues = async((kanbanBoardID, statuses) => {
+    var statusIDs = [];
+    var largeIssues = []; 
+    var result = '';
+    for (j = 0; j < statuses.length; j++) {
+        statusIDs.push(statuses[j].id);
+    }
+    if (statusIDs.length != 0){
+        var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+            .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) }));   
+        for (i =0 ; i < jiraResponse.issues.length; i++){
+            if (parseInt(jiraResponse.issues[i][`fields`][process.env.JIRA_STORYPOINTS]) > 3){
+                largeIssues.push(jiraResponse.issues[i]);
+            }
+        }
+    }
+
+    if (largeIssues.length > 1){
+        for (i = 0; i < largeIssues.length; i++){
+            var titles = `*${JiraService.HyperlinkJiraIssueID(largeIssues[i]['key'])}* - *${largeIssues[i]['fields']['summary']}*`;
+            var timeAgos = Utils.timeFromNow(largeIssues[i]["fields"]['updated']);
+            result += `\n${titles} (${timeAgos})`;
+        }
+    }
+    return result;
+
+});
+
+const extendedEstimates = async((kanbanBoardID, StatusIDs) => {
+    var extendedEstimate = [];
+    var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+        .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) })); 
+    console.log(jiraResponse.issues[4].fields);
+
+});
+
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
 const returnIssues = (JiraResponse) => {
     var result = '';
@@ -278,6 +396,21 @@ const returnIssues = (JiraResponse) => {
             var titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
             var timeAgos = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
             result += `\n${titles} (${timeAgos})`;
+        }
+    }
+    return result;
+};
+
+// return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_ASSIGNEE - JIRA_SUMMARY (TIME_AGO)'
+const returnIssuesWithAssignee = (JiraResponse) => {
+    var result = '';
+    const numOfIssues = JiraResponse.total;
+    if (numOfIssues > 0){
+        for (i = 0; i < numOfIssues; i++){
+            var titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
+            var assignee = `- *${JiraResponse['issues'][i][`fields`]['assignee']['displayName']}*`;
+            var timeAgos = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
+            result += `\n${titles} ${assignee} (${timeAgos})`;
         }
     }
     return result;
