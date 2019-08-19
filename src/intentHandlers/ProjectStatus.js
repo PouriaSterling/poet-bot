@@ -7,11 +7,6 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
 module.exports.process = async ((event, token, entities) => {
-    const boardCon = await(JiraService.boardInfo(`122/configuration`)
-    .catch(error => { throw new Error(`error getting board/122/configuration: ${error}`) }));
-//    //console.log(await (redColumnCheck(122, boardCon)));
-    console.log(await (extendedEstimates(122, boardCon)));
-    return;
 
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
@@ -286,7 +281,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
         }
         if (columns[i].name.toUpperCase() !== 'BACKLOG' && statusIDs != []) {
             var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-                .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) })); 
+                .catch(error => { throw new Error(`error getting redColumnCheck: ${error}`) })); 
             if (jiraResponse.issues.length > columns[i].max){
                 redColumns.push({
                     "text": `:exclamation: The ${columns[i].name} column is overflowing with the following issues:${returnIssuesWithAssignee(jiraResponse)}`,
@@ -355,12 +350,12 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
     var statusIDs = [];
     var largeIssues = []; 
     var result = '';
-    for (j = 0; j < statuses.length; j++) {
-        statusIDs.push(statuses[j].id);
+    for (i = 0; i < statuses.length; i++) {
+        statusIDs.push(statuses[i].id);
     }
     if (statusIDs.length != 0){
         var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) }));   
+            .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));   
         for (i =0 ; i < jiraResponse.issues.length; i++){
             if (parseInt(jiraResponse.issues[i][`fields`][process.env.JIRA_STORYPOINTS]) > 3){
                 largeIssues.push(jiraResponse.issues[i]);
@@ -376,14 +371,6 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
         }
     }
     return result;
-
-});
-
-const extendedEstimates = async((kanbanBoardID, StatusIDs) => {
-    var extendedEstimate = [];
-    var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-        .catch(error => { throw new Error(`error getting issues from Jira: ${error}`) })); 
-    console.log(jiraResponse.issues[4].fields);
 
 });
 
