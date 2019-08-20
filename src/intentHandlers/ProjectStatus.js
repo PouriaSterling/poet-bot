@@ -7,7 +7,6 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 
 module.exports.process = async ((event, token, entities) => {
-
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
     if (entities.length != 0){
@@ -301,7 +300,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
     return redColumns;
 });
 
-// Checks the 'prioritised' or 'scoped' columns and return an array of objects consisting of the results
+// Checks the 'prioritised' or 'scoped' columns for large issues and return an array of objects consisting of the results
 const largeIssues = async((kanbanBoardID, boardConfig) => {
     var largeProjects = [];
     const columns = boardConfig.columnConfig.columns;
@@ -345,7 +344,7 @@ const largeIssues = async((kanbanBoardID, boardConfig) => {
     return largeProjects;
 });
 
-// Returns issues that have storypoints > 3 IF there is more than one of them
+// Returns issues that have storypoints > 3 if there is more than one of them
 const returnLargeIssues = async((kanbanBoardID, statuses) => {
     var statusIDs = [];
     var largeIssues = []; 
