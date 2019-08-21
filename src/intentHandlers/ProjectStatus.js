@@ -283,7 +283,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
                 .catch(error => { throw new Error(`error getting redColumnCheck: ${error}`) })); 
             if (jiraResponse.issues.length > columns[i].max){
                 redColumns.push({
-                    "text": `:exclamation: The ${columns[i].name} column is overflowing with the following issues:${returnIssuesWithAssignee(jiraResponse)}`,
+                    "text": `:exclamation: The ${columns[i].name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
                     "color": "danger",
                     "mrkdwn_in": ["text"]
                 });
@@ -388,7 +388,7 @@ const returnIssues = (JiraResponse) => {
 };
 
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_ASSIGNEE - JIRA_SUMMARY (TIME_AGO)'
-const returnIssuesWithAssignee = (JiraResponse) => {
+const issuesWithAssignee = (JiraResponse) => {
     var result = '';
     const numOfIssues = JiraResponse.total;
     if (numOfIssues > 0){
