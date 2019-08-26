@@ -5,6 +5,7 @@ const DBService = require('../services/DBService.js');
 const Utils = require('../services/Utils.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
+const fp = require('lodash/fp');
 
 module.exports.process = async ((event, token, entities) => {
     // check if the user specified which check to do specifically
@@ -271,34 +272,40 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
 
 // Checks if there are any red columns and returns array of objects consisting of the results
 const redColumnCheck = async((kanbanBoardID, boardConfig) => {
-    var redColumns = [];
+    const allOk = [{
+        "text": `Kanban board Columns are all healthy! :white_check_mark:`,
+        "color":"good",
+        "mrkdwn_in": ["text"]
+    }];
     const columns = boardConfig.columnConfig.columns;
-    for (let i = 0; i < columns.length; i++) {
-        var statusIDs = [];
-        for (j = 0; j < columns[i].statuses.length; j++) {
-            statusIDs.push(columns[i].statuses[j].id);
-        }
-        if (columns[i].name.toUpperCase() !== 'BACKLOG' && statusIDs != []) {
-            var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-                .catch(error => { throw new Error(`error getting redColumnCheck: ${error}`) })); 
-            if (jiraResponse.issues.length > columns[i].max){
-                redColumns.push({
-                    "text": `:exclamation: The ${columns[i].name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
+
+    const redColumns = fp.map(function (response) {
+        if (response != null){
+            jiraResponse = response[0];
+            column = response[1];
+            if (jiraResponse.issues.length > column.max){
+                return {
+                    "text": `:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
                     "color": "danger",
                     "mrkdwn_in": ["text"]
-                });
+                };
             }
         }
-    }
-    if (redColumns.length == 0){
-        redColumns.push({
-            "text": `Kanban board Columns are all healthy! :white_check_mark:`,
-            "color":"good",
-            "mrkdwn_in": ["text"]
-        });
-    }
-    return redColumns;
-});
+    })
+      (fp.map(((function (column) {
+        var statusIDs;
+        if (column.name.toUpperCase() !== 'BACKLOG') {
+            statusIDs = fp.map('id')(column.statuses);
+        } else {
+            return null;
+        }
+        var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+            .catch(error => { throw new Error(`error getting redColumnCheck: ${error}`) }));
+            return [jiraResponse, column]; 
+    })))(columns)).filter(Boolean);
+    
+    return (redColumns.length === 0) ? allOk : redColumns;
+})
 
 // Checks the 'prioritised' or 'scoped' columns for large issues and return an array of objects consisting of the results
 const largeIssues = async((kanbanBoardID, boardConfig) => {
