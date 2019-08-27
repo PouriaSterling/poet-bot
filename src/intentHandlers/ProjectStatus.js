@@ -127,8 +127,10 @@ const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, old
     // list tickets not updated in last week. TODO highlight if in Stalled, In Progress or Completed
     kanbanChecks = kanbanChecks.concat(await (notUpdated(kanbanBoardID, StatusIDs, boardSubQuery)));
 
+    //list tickets on issues when there are multipla with story points > 3
     kanbanChecks = kanbanChecks.concat(await (largeIssues(kanbanBoardID, boardConfig)))
 
+    //list tickets on issues that have an overflowing kanban column
     kanbanChecks = kanbanChecks.concat(await (redColumnCheck(kanbanBoardID, boardConfig)));
 
     if (kanbanChecks.length == 0){
@@ -291,7 +293,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
         if (columnstatusIDs != null){
             column = columnstatusIDs[0];
             statusIDs = columnstatusIDs[1];
-            var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+            const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
             .catch(error => { throw new Error(`error getting issues in redColumnCheck: ${error}`) }));
             if (jiraResponse.issues.length > column.max){
                 return {
@@ -360,7 +362,7 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
         statusIDs.push(statuses[i].id);
     }
     if (statusIDs.length != 0){
-        var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+        const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
             .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));   
         for (i =0 ; i < jiraResponse.issues.length; i++){
             if (parseInt(jiraResponse.issues[i][`fields`][process.env.JIRA_STORYPOINTS]) > 3){
@@ -369,15 +371,12 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
         }
     }
 
-    if (largeIssues.length > 1){
-        for (i = 0; i < largeIssues.length; i++){
-            var titles = `*${JiraService.HyperlinkJiraIssueID(largeIssues[i]['key'])}* - *${largeIssues[i]['fields']['summary']}*`;
-            var timeAgos = Utils.timeFromNow(largeIssues[i]["fields"]['updated']);
-            result += `\n${titles} (${timeAgos})`;
+    for (i = 0; i < largeIssues.length; i++){
+        const titles = `*${JiraService.HyperlinkJiraIssueID(largeIssues[i]['key'])}* - *${largeIssues[i]['fields']['summary']}*`;
+        const timeAgos = Utils.timeFromNow(largeIssues[i]["fields"]['updated']);
+        result += `\n${titles} (${timeAgos})`;
         }
-    }
     return result;
-
 });
 
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
@@ -398,13 +397,11 @@ const returnIssues = (JiraResponse) => {
 const issuesWithAssignee = (JiraResponse) => {
     var result = '';
     const numOfIssues = JiraResponse.total;
-    if (numOfIssues > 0){
-        for (i = 0; i < numOfIssues; i++){
-            var titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
-            var assignee = `- *${JiraResponse['issues'][i][`fields`]['assignee']['displayName']}*`;
-            var timeAgos = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
-            result += `\n${titles} ${assignee} (${timeAgos})`;
-        }
+    for (i = 0; i < numOfIssues; i++){
+        const titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
+        const assignee = `- *${JiraResponse['issues'][i][`fields`]['assignee']['displayName']}*`;
+        const timeAgos = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
+        result += `\n${titles} ${assignee} (${timeAgos})`;
     }
     return result;
 };
