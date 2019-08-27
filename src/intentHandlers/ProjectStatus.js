@@ -8,6 +8,11 @@ const await = require('asyncawait/await');
 const fp = require('lodash/fp');
 
 module.exports.process = async ((event, token, entities) => {
+    const boardCon = await (JiraService.boardInfo(`122/configuration`)
+        .catch(error => {throw new Error(`error getting board/122/configuration: ${error}`)}));
+        console.log(await(redColumnCheck(122, boardCon)));
+        return null;
+
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
     if (entities.length != 0){
@@ -289,12 +294,12 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
         }
         return [column, statusIDs];
     };
-    const checkColumn = function (columnstatusIDs) {
+    const checkColumn = (columnstatusIDs) => {
         if (columnstatusIDs != null){
             column = columnstatusIDs[0];
             statusIDs = columnstatusIDs[1];
-            const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => { throw new Error(`error getting issues in redColumnCheck: ${error}`) }));
+            const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
+            const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
             if (jiraResponse.issues.length > column.max){
                 return {
                     "text": `:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
@@ -305,7 +310,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
         }
         return null;
     };
-    const redColumns = (fp.map (checkColumn) (fp.map (getStatusIDs) (columns) ) ).filter(Boolean);  
+    const redColumns = (fp.flow((fp.map (getStatusIDs)), (fp.map (checkColumn)))(columns)).filter(Boolean);  
     return (redColumns.length === 0) ? allOk : redColumns;
 })
 
@@ -362,8 +367,9 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
         statusIDs.push(statuses[i].id);
     }
     if (statusIDs.length != 0){
-        const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));   
+    //TODO 
+    const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
+    const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
         for (i =0 ; i < jiraResponse.issues.length; i++){
             if (parseInt(jiraResponse.issues[i][`fields`][process.env.JIRA_STORYPOINTS]) > 3){
                 largeIssues.push(jiraResponse.issues[i]);
@@ -405,3 +411,9 @@ const issuesWithAssignee = (JiraResponse) => {
     }
     return result;
 };
+
+const jiraBoardInfo = async((kanbanBoardID, jql) => {
+    const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?${jql}`)
+        .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));  
+    return jiraResponse;    
+})
