@@ -278,11 +278,21 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
         "mrkdwn_in": ["text"]
     }];
     const columns = boardConfig.columnConfig.columns;
-
-    const redColumns = fp.map(function (response) {
-        if (response != null){
-            jiraResponse = response[0];
-            column = response[1];
+    const getStatusIDs = function (column) {
+        var statusIDs;
+        if (column.name.toUpperCase() !== 'BACKLOG') {
+            statusIDs = fp.map('id')(column.statuses);
+        } else {
+            return null;
+        }
+        return [column, statusIDs];
+    };
+    const checkColumn = function (columnstatusIDs) {
+        if (columnstatusIDs != null){
+            column = columnstatusIDs[0];
+            statusIDs = columnstatusIDs[1];
+            var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
+            .catch(error => { throw new Error(`error getting issues in redColumnCheck: ${error}`) }));
             if (jiraResponse.issues.length > column.max){
                 return {
                     "text": `:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
@@ -291,19 +301,9 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
                 };
             }
         }
-    })
-      (fp.map(((function (column) {
-        var statusIDs;
-        if (column.name.toUpperCase() !== 'BACKLOG') {
-            statusIDs = fp.map('id')(column.statuses);
-        } else {
-            return null;
-        }
-        var jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => { throw new Error(`error getting redColumnCheck: ${error}`) }));
-            return [jiraResponse, column]; 
-    })))(columns)).filter(Boolean);
-    
+        return null;
+    };
+    const redColumns = (fp.map (checkColumn) (fp.map (getStatusIDs) (columns) ) ).filter(Boolean);  
     return (redColumns.length === 0) ? allOk : redColumns;
 })
 
