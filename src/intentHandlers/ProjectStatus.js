@@ -8,11 +8,6 @@ const await = require('asyncawait/await');
 const fp = require('lodash/fp');
 
 module.exports.process = async ((event, token, entities) => {
-    const boardCon = await (JiraService.boardInfo(`122/configuration`)
-        .catch(error => {throw new Error(`error getting board/122/configuration: ${error}`)}));
-        console.log(await(redColumnCheck(122, boardCon)));
-        return null;
-
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
     if (entities.length != 0){
