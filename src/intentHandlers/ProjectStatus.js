@@ -331,29 +331,25 @@ const largeIssues = async((kanbanBoardID, boardConfig) => {
 
 // Returns issues that have storypoints > 3 if there is more than one of them
 const returnLargeIssues = async((kanbanBoardID, statuses) => {
-    var statusIDs = [];
-    var largeIssues = []; 
-    var result = '';
-    for (i = 0; i < statuses.length; i++) {
-        statusIDs.push(statuses[i].id);
-    }
-    if (statusIDs.length != 0){
-    //TODO 
+    const statusIDs = fp.map('id')(statuses);
     const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
     const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
-        for (i =0 ; i < jiraResponse.issues.length; i++){
-            if (parseInt(jiraResponse.issues[i][`fields`][process.env.JIRA_STORYPOINTS]) > 3){
-                largeIssues.push(jiraResponse.issues[i]);
-            }
+    const getLargeIssues = function (issue) {
+        if (parseInt(issue[`fields`][process.env.JIRA_STORYPOINTS]) > 3){
+            return issue;
         }
+        return null;
+    };
+    const getslackIssues = ((issue) => {
+        const titles = `*${JiraService.HyperlinkJiraIssueID(issue['key'])}* - *${issue['fields']['summary']}*`;
+        const timeAgos = Utils.timeFromNow(issue["fields"]['updated']);
+        return `\n${titles} (${timeAgos})`;
+    });
+    const largeIssues = (fp.map(getLargeIssues)(jiraResponse.issues)).filter(Boolean);
+    if (largeIssues.length > 1){
+        return fp.map(getslackIssues)(largeIssues);
     }
-
-    for (i = 0; i < largeIssues.length; i++){
-        const titles = `*${JiraService.HyperlinkJiraIssueID(largeIssues[i]['key'])}* - *${largeIssues[i]['fields']['summary']}*`;
-        const timeAgos = Utils.timeFromNow(largeIssues[i]["fields"]['updated']);
-        result += `\n${titles} (${timeAgos})`;
-        }
-    return result;
+    return '';
 });
 
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
