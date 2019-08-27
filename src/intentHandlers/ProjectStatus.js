@@ -274,11 +274,7 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
 
 // Checks if there are any red columns and returns array of objects consisting of the results
 const redColumnCheck = async((kanbanBoardID, boardConfig) => {
-    const allOk = [{
-        "text": `Kanban board Columns are all healthy! :white_check_mark:`,
-        "color":"good",
-        "mrkdwn_in": ["text"]
-    }];
+    const allOk = [goodSlackResponse(`Kanban board Columns are all healthy! :white_check_mark:`)];
     const columns = boardConfig.columnConfig.columns;
     const getStatusIDs = function (column) {
         var statusIDs;
@@ -296,11 +292,7 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
             const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
             const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
             if (jiraResponse.issues.length > column.max){
-                return {
-                    "text": `:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`,
-                    "color": "danger",
-                    "mrkdwn_in": ["text"]
-                };
+                return dangerSlackResponse(`:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`);
             }
         }
         return null;
@@ -320,35 +312,19 @@ const largeIssues = async((kanbanBoardID, boardConfig) => {
     if (columnNames.includes("PRIORITISED")){
         var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('PRIORITISED')].statuses));
         if (result !== '') {
-            largeProjects.push({
-                "text": `:exclamation: The prioritised column has the following tickets with story points > 3:${result}`,
-                "color": "danger",
-                "mrkdwn_in": ["text"]
-            });
+            largeProjects.push(dangerSlackResponse(`:exclamation: The prioritised column has the following tickets with story points > 3:${result}`));
         }
     } else {
-        largeProjects.push({
-            "text": `:warning: The project is missing a prioritised column`,
-            "color": "danger",
-            "mrkdwn_in": ["text"]
-        });
+        largeProjects.push(dangerSlackResponse(`:warning: The project is missing a prioritised column`));
     }
 
     if (columnNames.includes("SCOPED")){
         var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('SCOPED')].statuses));
         if (result !== '') {
-            largeProjects.push({
-               "text": `:exclamation: The scoped column has the following tickets with story points > 3:${result}`,
-                "color": "danger",
-                "mrkdwn_in": ["text"]
-            });
+            largeProjects.push(dangerSlackResponse(`:exclamation: The scoped column has the following tickets with story points > 3:${result}`));
         }
     } else {
-        largeProjects.push({
-            "text": `:warning: The project is missing a scoped column`,
-            "color": "danger",
-            "mrkdwn_in": ["text"]
-        });
+        largeProjects.push(dangerSlackResponse(`:warning: The project is missing a scoped column`));
     }
     return largeProjects;
 });
@@ -412,3 +388,19 @@ const jiraBoardInfo = async((kanbanBoardID, jql) => {
         .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));  
     return jiraResponse;    
 })
+
+const goodSlackResponse = (message) => {
+    return ({
+        "text": `${message}`,
+        "color":"good",
+        "mrkdwn_in": ["text"]
+    });
+}
+
+const dangerSlackResponse = (message) => {
+    return({
+        "text": `${message}`,
+         "color": "danger",
+         "mrkdwn_in": ["text"]
+     });
+}
