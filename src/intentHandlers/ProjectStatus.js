@@ -5,6 +5,7 @@ const DBService = require('../services/DBService.js');
 const Utils = require('../services/Utils.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
+const fp = require('lodash/fp');
 
 module.exports.process = async ((event, token, entities) => {
     // check if the user specified which check to do specifically
@@ -85,7 +86,7 @@ module.exports.process = async ((event, token, entities) => {
     await (SlackService.postMessage(event.channel, text, [{}], token));
     switch (checksToGet){
         case 'kanban':
-            var kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery));
+            var kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
             await (SlackService.postMessage(event.channel, 'Kanban Checks:', kanbanCheckResults, token));
             break;
         case 'backlog':
@@ -102,7 +103,7 @@ module.exports.process = async ((event, token, entities) => {
             break;
         case 'all':
             // do all checks
-            kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery));
+            kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
             backlogCheckResults = await (backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS));
             reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
             ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
@@ -118,7 +119,7 @@ module.exports.process = async ((event, token, entities) => {
 });
 
 // Check the project kanban board and return an array of objects consisting of the results
-const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery) => {
+const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery, boardConfig) => {
     var kanbanChecks = [];
     // list newly created tickets in the last week
     kanbanChecks = kanbanChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery)));
@@ -126,9 +127,11 @@ const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, old
     // list tickets not updated in last week. TODO highlight if in Stalled, In Progress or Completed
     kanbanChecks = kanbanChecks.concat(await (notUpdated(kanbanBoardID, StatusIDs, boardSubQuery)));
 
-    // TODO report if more than 1 ticket with story point > 3 is in the prioritised or scoped columns
+    //list tickets on issues when there are multipla with story points > 3
+    kanbanChecks = kanbanChecks.concat(await (largeIssues(kanbanBoardID, boardConfig)))
 
-    // TODO report any red columns. Return the status and assignee of issue
+    //list tickets on issues that have an overflowing kanban column
+    kanbanChecks = kanbanChecks.concat(await (redColumnCheck(kanbanBoardID, boardConfig)));
 
     if (kanbanChecks.length == 0){
         kanbanChecks.push({"text": 'Kanban is all good! :white_check_mark:' , "color": "good"});
@@ -269,6 +272,86 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
     return newlyCreated;
 });
 
+// Checks if there are any red columns and returns array of objects consisting of the results
+const redColumnCheck = async((kanbanBoardID, boardConfig) => {
+    const allOk = [goodSlackResponse(`Kanban board Columns are all healthy! :white_check_mark:`)];
+    const columns = boardConfig.columnConfig.columns;
+    const getStatusIDs = function (column) {
+        var statusIDs;
+        if (column.name.toUpperCase() !== 'BACKLOG') {
+            statusIDs = fp.map('id')(column.statuses);
+        } else {
+            return null;
+        }
+        return [column, statusIDs];
+    };
+    const checkColumn = (columnstatusIDs) => {
+        if (columnstatusIDs != null){
+            column = columnstatusIDs[0];
+            statusIDs = columnstatusIDs[1];
+            const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
+            const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
+            if (jiraResponse.issues.length > column.max){
+                return dangerSlackResponse(`:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`);
+            }
+        }
+        return null;
+    };
+    const redColumns = (fp.flow((fp.map (getStatusIDs)), (fp.map (checkColumn)))(columns)).filter(Boolean);  
+    return (redColumns.length === 0) ? allOk : redColumns;
+})
+
+// Checks the 'prioritised' or 'scoped' columns for large issues and return an array of objects consisting of the results
+const largeIssues = async((kanbanBoardID, boardConfig) => {
+    var largeProjects = [];
+    const columns = boardConfig.columnConfig.columns;
+    columnNames = [];
+    for (i = 0; i < columns.length; i++){
+        columnNames.push(columns[i].name.toUpperCase());
+    }
+    if (columnNames.includes("PRIORITISED")){
+        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('PRIORITISED')].statuses));
+        if (result !== '') {
+            largeProjects.push(dangerSlackResponse(`:exclamation: The prioritised column has the following tickets with story points > 3:${result}`));
+        }
+    } else {
+        largeProjects.push(dangerSlackResponse(`:warning: The project is missing a prioritised column`));
+    }
+
+    if (columnNames.includes("SCOPED")){
+        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('SCOPED')].statuses));
+        if (result !== '') {
+            largeProjects.push(dangerSlackResponse(`:exclamation: The scoped column has the following tickets with story points > 3:${result}`));
+        }
+    } else {
+        largeProjects.push(dangerSlackResponse(`:warning: The project is missing a scoped column`));
+    }
+    return largeProjects;
+});
+
+// Returns issues that have storypoints > 3 if there is more than one of them
+const returnLargeIssues = async((kanbanBoardID, statuses) => {
+    const statusIDs = fp.map('id')(statuses);
+    const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
+    const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
+    const getLargeIssues = function (issue) {
+        if (parseInt(issue[`fields`][process.env.JIRA_STORYPOINTS]) > 3){
+            return issue;
+        }
+        return null;
+    };
+    const getslackIssues = ((issue) => {
+        const titles = `*${JiraService.HyperlinkJiraIssueID(issue['key'])}* - *${issue['fields']['summary']}*`;
+        const timeAgos = Utils.timeFromNow(issue["fields"]['updated']);
+        return `\n${titles} (${timeAgos})`;
+    });
+    const largeIssues = (fp.map(getLargeIssues)(jiraResponse.issues)).filter(Boolean);
+    if (largeIssues.length > 1){
+        return fp.map(getslackIssues)(largeIssues);
+    }
+    return '';
+});
+
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
 const returnIssues = (JiraResponse) => {
     var result = '';
@@ -282,3 +365,38 @@ const returnIssues = (JiraResponse) => {
     }
     return result;
 };
+
+// return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_ASSIGNEE - JIRA_SUMMARY (TIME_AGO)'
+const issuesWithAssignee = (JiraResponse) => {
+    var result = '';
+    const numOfIssues = JiraResponse.total;
+    for (i = 0; i < numOfIssues; i++){
+        const titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
+        const assignee = `- *${JiraResponse['issues'][i][`fields`]['assignee']['displayName']}*`;
+        const timeAgos = Utils.timeFromNow(JiraResponse['issues'][i]["fields"]['updated']);
+        result += `\n${titles} ${assignee} (${timeAgos})`;
+    }
+    return result;
+};
+
+const jiraBoardInfo = async((kanbanBoardID, jql) => {
+    const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?${jql}`)
+        .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));  
+    return jiraResponse;    
+})
+
+const goodSlackResponse = (message) => {
+    return ({
+        "text": `${message}`,
+        "color":"good",
+        "mrkdwn_in": ["text"]
+    });
+}
+
+const dangerSlackResponse = (message) => {
+    return({
+        "text": `${message}`,
+         "color": "danger",
+         "mrkdwn_in": ["text"]
+     });
+}
