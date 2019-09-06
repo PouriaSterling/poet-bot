@@ -35,6 +35,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         name: "<Your Dev JIRA Username>"
         password: "<Your Dev JIRA Password>"
         url: "<Your Dev JIRA Base URL>"
+        storypointsfieldID: "<Your Dev JIRA storypoints field name>"
 
 	production:
 	  slack:
@@ -49,11 +50,13 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         name: "<Your Production JIRA Username>"
         password: "<Your Production JIRA Password>"
         url: "<Your Production JIRA Base URL>"
+        storypointsfieldID: "<Your Production JIRA storypoints field name>"
 	```
 
   Notes:
   * 'clientid' must be quoted otherwise it is interpreted as a number.
   * Leave your 'botId' fields empty for now, we will configure them after you've created your bot.
+  * storypointsfieldID is the custom ID for your storypoints field. i.e. customfield_10054
   * Do not commit this file. It is already Git ignored.
 
 * Deploy the server to AWS Lambda `serverless deploy` or a shorter form `sls deploy`
