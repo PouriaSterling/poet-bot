@@ -10,8 +10,8 @@ package:
 provider:
   name: aws
   region: ap-southeast-2
-  stage: dev
-  runtime: nodejs6.10
+  stage: ${opt:stage, 'dev'}
+  runtime: nodejs8.10
   environment:
     CLIENT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientId}
     CLIENT_SECRET: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientSecret}

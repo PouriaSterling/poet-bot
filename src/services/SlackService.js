@@ -1,4 +1,4 @@
-const WebClient = require('@slack/client').WebClient;
+const { WebClient } = require('@slack/web-api');
 const toTitleCase = require('titlecase');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');

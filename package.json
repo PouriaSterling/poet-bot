@@ -6,10 +6,9 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@slack/client": "^3.7.0",
-    "asyncawait": "^1.0.6",
+    "@slack/web-api": "^5.2.0",
     "aws-sdk": "^2.170.0",
-    "axios": "^0.17.1",
+    "axios": "^0.19.0",
     "jira2slack": "^1.0.2",
     "moment": "^2.20.1",
     "require-dir": "^0.3.2",
@@ -20,6 +19,6 @@
   "devDependencies": {
     "cheerio": "^0.22.0",
     "jasmine": "^2.5.2",
-    "serverless-offline": "^3.16.0"
+    "serverless-offline": "^5.11.0"
   }
 }
