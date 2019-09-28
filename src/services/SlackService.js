@@ -1,16 +1,14 @@
 const { WebClient } = require('@slack/web-api');
 const toTitleCase = require('titlecase');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 
 // post a message to Slack
-module.exports.postMessage = async ((channel, text, attachments, token) => {
+module.exports.postMessage = async (channel, text, attachments, token) => {
     const web = new WebClient(token);
     await (web.chat.postMessage(channel, text, {
         attachments: JSON.stringify(attachments)
     })
         .catch(error => console.log(`Error posting Slack message: ${error}`)));
-});
+};
 
 // post an error message to Slack. Function provides consistent error reporting
 module.exports.postError = (errorMessage, channel, token) => {
@@ -35,7 +33,7 @@ module.exports.updateMessage = (channel, text, attachments, token, timestamp) =>
 
 // Query Slack for list of users, search for the 'target' and return their
 // fullname and display name (if they exist)
-module.exports.GetFullName = async ((target, targetType, token) => {
+module.exports.GetFullName = async (target, targetType, token) => {
     const web = new WebClient(token);
     const userList = await (web.users.list()
         .catch(err=> console.log(`Error getting user list: ${err}`)));
@@ -79,4 +77,4 @@ module.exports.GetFullName = async ((target, targetType, token) => {
 
     console.log("Found fullname: " + fullName + ", jirausername: " + jiraUsername);
     return {"fullName": fullName, "jiraUsername": jiraUsername};
-});
+};

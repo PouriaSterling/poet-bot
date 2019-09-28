@@ -1,11 +1,9 @@
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const DBService = require('../services/DBService.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 const Slackify = require('slackify-html');
 
-module.exports.process = async ((event, token) => {
+module.exports.process = async (event, token) => {
     // get the project key for the channel
     const ContextResponse = await (DBService.retrieveChannelContext(event.channel)
         .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
@@ -35,4 +33,4 @@ module.exports.process = async ((event, token) => {
         }
     ];
     SlackService.postMessage(event.channel, text, attachments, token);
-});
+};

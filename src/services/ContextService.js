@@ -1,10 +1,8 @@
 const DBService = require('./DBService.js');
 const JiraService = require('./JiraService.js');
 const SlackService = require('./SlackService.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 
-module.exports.maintainContextIssueID = async ((message, channel) => {
+module.exports.maintainContextIssueID = async (message, channel) => {
     // Collect all regex matches in an array
     var matches = message.match(/\w+-\d+/g);
     if (matches){
@@ -27,7 +25,7 @@ module.exports.maintainContextIssueID = async ((message, channel) => {
            }
         }
     }
-});
+};
 
 module.exports.fetchContextIssue = (channel, token) => {
     console.log('Fetching...');
@@ -55,7 +53,7 @@ module.exports.fetchContextIssue = (channel, token) => {
 };
 
 // given a projectKey, find the associated Kanban board
-module.exports.updateProjectKanbanBoardInfo = async ((projectKey, channel) => {
+module.exports.updateProjectKanbanBoardInfo = async (projectKey, channel) => {
     const allBoards = await (JiraService.boardInfo(`?type=kanban&projectKeyOrId=${projectKey}`)
         .catch(error => {throw new Error(`Failed to get kanbanBoard info: ${error}`)}));
 
@@ -72,4 +70,4 @@ module.exports.updateProjectKanbanBoardInfo = async ((projectKey, channel) => {
         }
     }
     return boardId;
-});
+};

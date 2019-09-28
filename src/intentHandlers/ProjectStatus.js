@@ -3,11 +3,9 @@ const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const DBService = require('../services/DBService.js');
 const Utils = require('../services/Utils.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 const fp = require('lodash/fp');
 
-module.exports.process = async ((event, token, entities) => {
+module.exports.process = async (event, token, entities) => {
     // check if the user specified which check to do specifically
     var checksToGet = 'all';
     if (entities.length != 0){
@@ -116,10 +114,10 @@ module.exports.process = async ((event, token, entities) => {
         default:
             throw new Error(`${checksToGet} is not a check type. Please specify either 'kanban', 'backlog' or 'report'.`);
     }
-});
+};
 
 // Check the project kanban board and return an array of objects consisting of the results
-const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery, boardConfig) => {
+const kanbanChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery, boardConfig) => {
     var kanbanChecks = [];
     // list newly created tickets in the last week
     kanbanChecks = kanbanChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery)));
@@ -137,10 +135,10 @@ const kanbanChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, old
         kanbanChecks.push({"text": 'Kanban is all good! :white_check_mark:' , "color": "good"});
     }
     return kanbanChecks;
-});
+};
 
 // Check the project backlog and return an array of objects consisting of the results
-const backlogChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS) => {
+const backlogChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS) => {
     var backlogChecks = [];
     // list newly created tickets in the last week or since the last checked date
     backlogChecks = backlogChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS)));
@@ -156,10 +154,10 @@ const backlogChecks = async ((projectKey, kanbanBoardID, StatusIDs, middleTS, ol
         backlogChecks.push({"text": "Backlog is all good! :white_check_mark:" , "color": "good"});
     }
     return backlogChecks;
-});
+};
 
 // Check the project reports and return an array of objects consisting of the results
-const reportChecks = async ((projectKey, kanbanBoardID) => {
+const reportChecks = async (projectKey, kanbanBoardID) => {
     var reportChecks = [];
     const reportInfo = await (JiraService.reportsInfo(kanbanBoardID)
         .catch(error => {throw new Error(`Error getting reportInfo for kanbanBoardID ${kanbanBoardID}: ${error}`)}));
@@ -188,9 +186,9 @@ const reportChecks = async ((projectKey, kanbanBoardID) => {
         reportChecks.push({"text": 'Reports are all good! :white_check_mark:' , "color": "good"});
     }
     return reportChecks;
-});
+};
 
-const findTicketsAwaitingRelease = async ((projectKey, kanbanBoardID) => {
+const findTicketsAwaitingRelease = async (projectKey, kanbanBoardID) => {
     let ticketsAwaitingRelease = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution in (Done, Fixed) ORDER BY updated ASC`)
         .catch(error => {throw new Error(`Error finding tickets awaiting release on kanban board ${kanbanBoardID}: ${error}`)}));
 
@@ -200,10 +198,10 @@ const findTicketsAwaitingRelease = async ((projectKey, kanbanBoardID) => {
         "color": "danger",
         "mrkdwn_in": ["text"],
     }];
-});
+};
 
 // given board and status IDs and a potential subquery, query JIRA and return a list of issues not updated in the last week
-const notUpdated = async ((kanbanBoardID, StatusIDs, subQuery = '') => {
+const notUpdated = async (kanbanBoardID, StatusIDs, subQuery = '') => {
     var notUpdated = [];
     notUpdatedRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and updatedDate <= -1w ${subQuery} and resolution is EMPTY ORDER BY updated ASC`)
        .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)}));
@@ -216,10 +214,10 @@ const notUpdated = async ((kanbanBoardID, StatusIDs, subQuery = '') => {
                             });
     }
     return notUpdated;
-});
+};
 
 // given a board ID, status IDs, timestamps and a potential subquery, query JIRA and return an array of issues created recently
-const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQuery = '') => {
+const newlyCreated = async (kanbanBoardID, StatusIDs, middleTS, oldestTS, subQuery = '') => {
     var newlyCreated = [];
     var createdRecentlyIssues;
     var createdPreviouslyIssues;
@@ -270,10 +268,10 @@ const newlyCreated = async ((kanbanBoardID, StatusIDs, middleTS, oldestTS, subQu
     }
 
     return newlyCreated;
-});
+};
 
 // Checks if there are any red columns and returns array of objects consisting of the results
-const redColumnCheck = async((kanbanBoardID, boardConfig) => {
+const redColumnCheck = async (kanbanBoardID, boardConfig) => {
     const allOk = [goodSlackResponse(`Kanban board Columns are all healthy! :white_check_mark:`)];
     const columns = boardConfig.columnConfig.columns;
     const getStatusIDs = function (column) {
@@ -299,10 +297,10 @@ const redColumnCheck = async((kanbanBoardID, boardConfig) => {
     };
     const redColumns = (fp.flow((fp.map (getStatusIDs)), (fp.map (checkColumn)))(columns)).filter(Boolean);  
     return (redColumns.length === 0) ? allOk : redColumns;
-})
+};
 
 // Checks the 'prioritised' or 'scoped' columns for large issues and return an array of objects consisting of the results
-const largeIssues = async((kanbanBoardID, boardConfig) => {
+const largeIssues = async (kanbanBoardID, boardConfig) => {
     var largeProjects = [];
     const columns = boardConfig.columnConfig.columns;
     columnNames = [];
@@ -327,10 +325,10 @@ const largeIssues = async((kanbanBoardID, boardConfig) => {
         largeProjects.push(dangerSlackResponse(`:warning: The project is missing a scoped column`));
     }
     return largeProjects;
-});
+};
 
 // Returns issues that have storypoints > 3 if there is more than one of them
-const returnLargeIssues = async((kanbanBoardID, statuses) => {
+const returnLargeIssues = async (kanbanBoardID, statuses) => {
     const statusIDs = fp.map('id')(statuses);
     const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
     const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
@@ -350,7 +348,7 @@ const returnLargeIssues = async((kanbanBoardID, statuses) => {
         return fp.map(getslackIssues)(largeIssues);
     }
     return '';
-});
+};
 
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
 const returnIssues = (JiraResponse) => {
@@ -379,11 +377,11 @@ const issuesWithAssignee = (JiraResponse) => {
     return result;
 };
 
-const jiraBoardInfo = async((kanbanBoardID, jql) => {
+const jiraBoardInfo = async (kanbanBoardID, jql) => {
     const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?${jql}`)
         .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));  
     return jiraResponse;    
-})
+};
 
 const goodSlackResponse = (message) => {
     return ({
@@ -391,7 +389,7 @@ const goodSlackResponse = (message) => {
         "color":"good",
         "mrkdwn_in": ["text"]
     });
-}
+};
 
 const dangerSlackResponse = (message) => {
     return({
@@ -399,4 +397,4 @@ const dangerSlackResponse = (message) => {
          "color": "danger",
          "mrkdwn_in": ["text"]
      });
-}
+};

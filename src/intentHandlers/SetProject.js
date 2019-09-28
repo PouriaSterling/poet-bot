@@ -1,10 +1,8 @@
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const DBService = require('../services/DBService.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 
-module.exports.process = async ((event, token, entities) => {
+module.exports.process = async (event, token, entities) => {
     var projectKey = null;
     // if no entity was found by Luis throw an error
     if (entities.length != 0){
@@ -52,10 +50,10 @@ module.exports.process = async ((event, token, entities) => {
     }else{
         await (setProjectKey(projectKey, event.channel, token));
     }
-});
+};
 
 
-module.exports.interactiveCallback = async ((event, token) => {
+module.exports.interactiveCallback = async (event, token) => {
     console.log(`SetProject interactiveCallback: ${JSON.stringify(event)}`);
     switch (event.actions[0].value){
         case 'yes':
@@ -68,7 +66,7 @@ module.exports.interactiveCallback = async ((event, token) => {
         default:
             throw new Error(`Internal error: '${event.actions[0].value}' is not a correct option for SetProject interactiveCallback`);
     }
-});
+};
 
 
 const setProjectKey = (projectKey, channel, token, timestamp) => {

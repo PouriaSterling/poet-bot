@@ -3,8 +3,6 @@ const SlackService = require('./services/SlackService.js');
 const LuisService = require('./services/LuisService.js');
 const DBService = require('./services/DBService.js');
 const Utils = require('./services/Utils.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 const requireDir = require('require-dir');
 const IntentHandlers = requireDir('./intentHandlers');
 const thrw = require('throw');
@@ -114,7 +112,7 @@ module.exports.receptionist = (event, context, callback) => {
 };
 
 // event Lambda calls Luis and palms execution off to intended intent handler
-module.exports.event = async ((event, context, callback) => {
+module.exports.event = async (event, context, callback) => {
     const jsonBody = JSON.parse(event.body);
     if (jsonBody.type === 'event_callback'){
         // retrieve the bot access token from the DynamoDB
@@ -138,10 +136,10 @@ module.exports.event = async ((event, context, callback) => {
             .catch(error => console.log(error)));
         handleInteractiveCallbacks(jsonBody, botAccessToken);
 	}
-});
+};
 
 // report error or call the JIRA handler function based on Luis response
-const handleIntent = async ((response, event, token) => {
+const handleIntent = async (response, event, token) => {
     console.log("LUIS: " + JSON.stringify(response));
     // catch LUIS call errors
     if (response.statusCode >= 300){
@@ -162,7 +160,7 @@ const handleIntent = async ((response, event, token) => {
     }else{
         SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer (into action)! :raised_hand_with_fingers_splayed: ", event.channel, token);
     }
-});
+};
 
 const handleInteractiveCallbacks = (event, token) => {
     console.log(`interactive callback for ${event.callback_id}`);

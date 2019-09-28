@@ -1,10 +1,8 @@
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
 const Utils = require('../services/Utils.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 
-module.exports.process = async ((event, token, entities) => {
+module.exports.process = async (event, token, entities) => {
     // check that a status entity was correctly identified by Luis, or thrown and error
     var status = null;
     if (entities.length != 0){
@@ -52,4 +50,4 @@ module.exports.process = async ((event, token, entities) => {
     }
 
     SlackService.postMessage(event.channel, text, attachments, token);
-});
+};

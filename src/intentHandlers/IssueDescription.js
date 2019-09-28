@@ -1,11 +1,9 @@
 const ContextService = require('../services/ContextService.js');
 const SlackService = require('../services/SlackService.js');
 const JiraService = require('../services/JiraService.js');
-const async = require('asyncawait/async');
-const await = require('asyncawait/await');
 const j2s = require('jira2slack');
 
-module.exports.process = async ((event, token, entities) => {
+module.exports.process = async (event, token, entities) => {
     var issueID = null;
     // if no entity was found by Luis, check for a context issue
     if (entities.length != 0){
@@ -60,4 +58,4 @@ module.exports.process = async ((event, token, entities) => {
         },
     ];
     SlackService.postMessage(event.channel, text, attachments, token);
-});
+};
