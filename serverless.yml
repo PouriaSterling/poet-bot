@@ -13,6 +13,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   runtime: nodejs8.10
   environment:
+    STAGE: ${self:provider.stage}
     CLIENT_ID: ${file(local.yml):${self:provider.stage}.slack.clientId}
     CLIENT_SECRET: ${file(local.yml):${self:provider.stage}.slack.clientSecret}
     SLACK_BOT_ID: ${file(local.yml):${self:provider.stage}.slack.botId}

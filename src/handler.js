@@ -88,13 +88,12 @@ module.exports.receptionist = (event, context, callback) => {
     } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) ) && !timeoutRetry){
         // asynchronously call event Lambda
         lambda.invoke({
-            FunctionName: 'poet-bot-dev-event',
+            FunctionName: `poet-bot-${process.env.STAGE}-event`,
             InvocationType: 'Event',
             Payload: JSON.stringify(event, null, 2)
             }, function(error, data) {
             if (error) {
                 console.log("Invoke error: " + error);
-//                context.done('error', error);
             }
             if(data.Payload){
                 console.log("Invoke success: " + data.Payload);
