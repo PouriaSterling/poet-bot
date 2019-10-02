@@ -27,6 +27,7 @@ provider:
     JIRA_STORYPOINTS: ${file(local.yml):${self:provider.stage}.jira.storypointsfieldID}
     JENKINS_AUTHORISATION_HEADER: ${file(local.yml):${self:provider.stage}.jenkins.authorisationHeader}
     JENKINS_URL: ${file(local.yml):${self:provider.stage}.jenkins.url}
+    JENKINS_DEPLOY_JOB_PATH: ${file(local.yml):${self:provider.stage}.jenkins.deployJobPath}
     JIRA_ISSUE_ENDPOINT: "/rest/api/latest/issue/"
     JIRA_SEARCH_ENDPOINT: "/rest/api/latest/search/"
     JIRA_PROJECT_ENDPOINT: "/rest/api/latest/project/"
