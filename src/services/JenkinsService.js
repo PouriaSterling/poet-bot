@@ -12,11 +12,11 @@ const jobPath = "job/Sandbox/job/post-stage-test";
 /**
  * Check the state of the deploy job
  */
-module.exports.check = () => {
+module.exports.isUnlocked = () => {
   return axios
     .get(`${jenkinsUrl}${jobPath}/api/json?pretty=true`, config)
     .then(function(response) {
-      return response.data.buildable ? ":unlock:" : ":lock:";
+      return response.data.buildable;
     })
     .catch(function(error) {
       console.log(error);
