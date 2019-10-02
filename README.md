@@ -71,13 +71,23 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 	```
 
 * Go to your [Slack app](https://api.slack.com/apps) and:
-  * Select 'OAuth & Permissions' and in the 'Redirect URL(s)' box paste the `authorized` endpoint
-  * Select 'Bot Users' and then 'Add a Bot User' to create a bot for your application
+  * Select **OAuth & Permissions** and 
+    * In the 'Redirect URL(s)' box paste the `authorized` endpoint
+    * Under **Scopes**, select the following permission scopes:
+      * channels:history
+      * chat:write:bot
+      * users:read
+      * users.profile:read
+  * Select **Bot Users** and then 'Add a Bot User' to create a bot for your application
     * Set 'Always Show My Bot as Online' to on
-  * Select 'Event Subscriptions' and:
+  * Select **Event Subscriptions** and:
     * Switch 'Enable Events' to on
-    * in the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
+    * In the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
     * Once verified, under 'Subscribe to Bot Events' select 'Add Bot User Event' and choose 'message.channels'
+    * Save changes
+  * Select **Interactive Components**
+    * Toggle *Interactivity* to on
+    * In the 'Request URL' box paste the `receptionist` endpoint
     * Save changes
 
 * Navigate to your `install` endpoint using your browser and choose 'Add to Slack'
