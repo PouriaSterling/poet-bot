@@ -13,8 +13,8 @@ module.exports.process = async (event, token, entities) => {
     }
 
     // get the context information for this channel
-    const ContextResponse = await (DBService.retrieveChannelContext(event.channel)
-        .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
+    const ContextResponse = await DBService.retrieveChannelContext(event.channel)
+        .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)});
 
     if (!ContextResponse || !ContextResponse.projectKey){
         throw new Error("Please set a channel project first using e.g. '@poet Set the project to POET'");
@@ -25,20 +25,20 @@ module.exports.process = async (event, token, entities) => {
     var kanbanBoardID = ContextResponse.kanbanBoardID || null;
     if (!kanbanBoardID){
         //Update all Project kanban information
-        kanbanBoardID = await (ContextService.updateProjectKanbanBoardInfo(projectKey, event.channel));
+        kanbanBoardID = await ContextService.updateProjectKanbanBoardInfo(projectKey, event.channel);
         if (kanbanBoardID === 'notFound'){
             throw new Error(`Couldn't find a *Kanban board* for the project *${projectKey}*`);
         }
     }
 
     // get the project info
-    const jiraResponse = await (JiraService.projectInfo(projectKey)
-        .catch(error => {throw new Error(`Error in *Project Status* while fetching project information for *${projectKey}*":\n${error.message}`)}));
+    const jiraResponse = await JiraService.projectInfo(projectKey)
+        .catch(error => {throw new Error(`Error in *Project Status* while fetching project information for *${projectKey}*":\n${error.message}`)});
     const name = jiraResponse['name'];
 
     // get the Kanban configuration information for the project
-    const boardConfig = await (JiraService.boardInfo(`${kanbanBoardID}/configuration`)
-        .catch(error => {throw new Error(`error getting board/${kanbanBoardID}/configuration: ${error}`)}));
+    const boardConfig = await JiraService.boardInfo(`${kanbanBoardID}/configuration`)
+        .catch(error => {throw new Error(`error getting board/${kanbanBoardID}/configuration: ${error}`)});
     const columns = boardConfig.columnConfig.columns;
     var boardSubQuery;
     if (boardConfig.subQuery.query){
@@ -66,50 +66,50 @@ module.exports.process = async (event, token, entities) => {
             if (ContextResponse.middleTS){
                 const tempTS1 = ContextResponse.newestTS;
                 const tempTS2 = ContextResponse.middleTS;
-                await (DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() , middleTS: tempTS1 , oldestTS: tempTS2 })
-                   .catch(error => console.log(`Failed to update project status timestamps: ${error}`)));
+                await DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() , middleTS: tempTS1 , oldestTS: tempTS2 })
+                   .catch(error => console.log(`Failed to update project status timestamps: ${error}`));
             }else{
                 const tempTS = ContextResponse.newestTS;
-                await (DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() , middleTS: tempTS })
-                   .catch(error => console.log(`Failed to update project status timestamps: ${error}`)));
+                await DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() , middleTS: tempTS })
+                   .catch(error => console.log(`Failed to update project status timestamps: ${error}`));
             }
         }
     }else{
-        await (DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() })
-           .catch(error => console.log(`Failed to update project status timestamps: ${error}`)));
+        await DBService.updateChannelContext(event.channel, { newestTS: Utils.todaysDate() })
+           .catch(error => console.log(`Failed to update project status timestamps: ${error}`));
     }
 
     // Send the results of the checks requested by the user to Slack
     const text = `Here is the current status of the project *${JiraService.HyperlinkJiraProjectKey(projectKey, name)}*`;
-    await (SlackService.postMessage(event.channel, text, [{}], token));
+    await SlackService.postMessage(event.channel, text, [{}], token);
     switch (checksToGet){
         case 'kanban':
-            var kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
-            await (SlackService.postMessage(event.channel, 'Kanban Checks:', kanbanCheckResults, token));
+            var kanbanCheckResults = await kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig);
+            await SlackService.postMessage(event.channel, 'Kanban Checks:', kanbanCheckResults, token);
             break;
         case 'backlog':
-            var backlogCheckResults = await (backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS));
-            await (SlackService.postMessage(event.channel, 'Backlog Checks:', backlogCheckResults, token));
+            var backlogCheckResults = await backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS);
+            await SlackService.postMessage(event.channel, 'Backlog Checks:', backlogCheckResults, token);
             break;
         case 'report':
-            var reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
-            await (SlackService.postMessage(event.channel, 'Report Checks:', reportCheckResults, token));
+            var reportCheckResults = await reportChecks(projectKey, kanbanBoardID);
+            await SlackService.postMessage(event.channel, 'Report Checks:', reportCheckResults, token);
             break;
         case 'unreleased':
-            var ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
-            await (SlackService.postMessage(event.channel, 'Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token));
+            var ticketsAwaitingReleaseResults = await findTicketsAwaitingRelease(projectKey, kanbanBoardID);
+            await SlackService.postMessage(event.channel, 'Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token);
             break;
         case 'all':
             // do all checks
-            kanbanCheckResults = await (kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig));
-            backlogCheckResults = await (backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS));
-            reportCheckResults = await (reportChecks(projectKey, kanbanBoardID));
-            ticketsAwaitingReleaseResults = await (findTicketsAwaitingRelease(projectKey, kanbanBoardID));
+            kanbanCheckResults = await kanbanChecks(projectKey, kanbanBoardID, notBacklogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS, boardSubQuery, boardConfig);
+            backlogCheckResults = await backlogChecks(projectKey, kanbanBoardID, backlogStatusIDs, ContextResponse.middleTS, ContextResponse.oldestTS);
+            reportCheckResults = await reportChecks(projectKey, kanbanBoardID);
+            ticketsAwaitingReleaseResults = await findTicketsAwaitingRelease(projectKey, kanbanBoardID);
             // Send the results to Slack in order
-            await (SlackService.postMessage(event.channel, ':one: Kanban Checks:', kanbanCheckResults, token));
-            await (SlackService.postMessage(event.channel, ':two: Backlog Checks:', backlogCheckResults, token));
-            await (SlackService.postMessage(event.channel, ':three: Report Checks:', reportCheckResults, token));
-            await (SlackService.postMessage(event.channel, ':four: Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token));
+            await SlackService.postMessage(event.channel, ':one: Kanban Checks:', kanbanCheckResults, token);
+            await SlackService.postMessage(event.channel, ':two: Backlog Checks:', backlogCheckResults, token);
+            await SlackService.postMessage(event.channel, ':three: Report Checks:', reportCheckResults, token);
+            await SlackService.postMessage(event.channel, ':four: Tickets Awaiting Release:', ticketsAwaitingReleaseResults, token);
             break;
         default:
             throw new Error(`${checksToGet} is not a check type. Please specify either 'kanban', 'backlog' or 'report'.`);
@@ -120,16 +120,16 @@ module.exports.process = async (event, token, entities) => {
 const kanbanChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery, boardConfig) => {
     var kanbanChecks = [];
     // list newly created tickets in the last week
-    kanbanChecks = kanbanChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery)));
+    kanbanChecks = kanbanChecks.concat(await newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS, boardSubQuery));
 
     // list tickets not updated in last week. TODO highlight if in Stalled, In Progress or Completed
-    kanbanChecks = kanbanChecks.concat(await (notUpdated(kanbanBoardID, StatusIDs, boardSubQuery)));
+    kanbanChecks = kanbanChecks.concat(await notUpdated(kanbanBoardID, StatusIDs, boardSubQuery));
 
     //list tickets on issues when there are multipla with story points > 3
-    kanbanChecks = kanbanChecks.concat(await (largeIssues(kanbanBoardID, boardConfig)))
+    kanbanChecks = kanbanChecks.concat(await largeIssues(kanbanBoardID, boardConfig));
 
     //list tickets on issues that have an overflowing kanban column
-    kanbanChecks = kanbanChecks.concat(await (redColumnCheck(kanbanBoardID, boardConfig)));
+    kanbanChecks = kanbanChecks.concat(await redColumnCheck(kanbanBoardID, boardConfig));
 
     if (kanbanChecks.length == 0){
         kanbanChecks.push({"text": 'Kanban is all good! :white_check_mark:' , "color": "good"});
@@ -141,10 +141,10 @@ const kanbanChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, olde
 const backlogChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, oldestTS) => {
     var backlogChecks = [];
     // list newly created tickets in the last week or since the last checked date
-    backlogChecks = backlogChecks.concat(await (newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS)));
+    backlogChecks = backlogChecks.concat(await newlyCreated(kanbanBoardID, StatusIDs, middleTS, oldestTS));
 
     // list tickets not updated in last week
-    backlogChecks = backlogChecks.concat(await (notUpdated(kanbanBoardID, StatusIDs)));
+    backlogChecks = backlogChecks.concat(await notUpdated(kanbanBoardID, StatusIDs));
 
     // give a link to the project backlog so they can confirm the priority of issues
     const link = `${process.env.JIRA_URL}/secure/RapidBoard.jspa?projectKey=${projectKey}&rapidView=${kanbanBoardID}&view=planning`;
@@ -159,8 +159,8 @@ const backlogChecks = async (projectKey, kanbanBoardID, StatusIDs, middleTS, old
 // Check the project reports and return an array of objects consisting of the results
 const reportChecks = async (projectKey, kanbanBoardID) => {
     var reportChecks = [];
-    const reportInfo = await (JiraService.reportsInfo(kanbanBoardID)
-        .catch(error => {throw new Error(`Error getting reportInfo for kanbanBoardID ${kanbanBoardID}: ${error}`)}));
+    const reportInfo = await JiraService.reportsInfo(kanbanBoardID)
+        .catch(error => {throw new Error(`Error getting reportInfo for kanbanBoardID ${kanbanBoardID}: ${error}`)});
 
     // extract column id's for the desired columns in report. Use them to build report links
     var controlChartColumns = [];
@@ -189,8 +189,8 @@ const reportChecks = async (projectKey, kanbanBoardID) => {
 };
 
 const findTicketsAwaitingRelease = async (projectKey, kanbanBoardID) => {
-    let ticketsAwaitingRelease = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution in (Done, Fixed) ORDER BY updated ASC`)
-        .catch(error => {throw new Error(`Error finding tickets awaiting release on kanban board ${kanbanBoardID}: ${error}`)}));
+    let ticketsAwaitingRelease = await JiraService.boardInfo(`${kanbanBoardID}/issue?jql=issueType!= Epic and resolution in (Done, Fixed) ORDER BY updated ASC`)
+        .catch(error => {throw new Error(`Error finding tickets awaiting release on kanban board ${kanbanBoardID}: ${error}`)});
 
     const total = ticketsAwaitingRelease.total;
     return [{
@@ -203,15 +203,15 @@ const findTicketsAwaitingRelease = async (projectKey, kanbanBoardID) => {
 // given board and status IDs and a potential subquery, query JIRA and return a list of issues not updated in the last week
 const notUpdated = async (kanbanBoardID, StatusIDs, subQuery = '') => {
     var notUpdated = [];
-    notUpdatedRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and updatedDate <= -1w ${subQuery} and resolution is EMPTY ORDER BY updated ASC`)
-       .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)}));
+    notUpdatedRecentlyIssues = await JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and updatedDate <= -1w ${subQuery} and resolution is EMPTY ORDER BY updated ASC`)
+       .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)});
     const total = notUpdatedRecentlyIssues.total;
     if (total > 0){
         notUpdated.push({
-                                "text": `:exclamation: There are ${total} issues not updated in more than a week. ${returnIssues(notUpdatedRecentlyIssues)}`,
-                                "color": "danger",
-                                "mrkdwn_in": ["text"]
-                            });
+            "text": `:exclamation: There are ${total} issues not updated in more than a week. ${returnIssues(notUpdatedRecentlyIssues)}`,
+            "color": "danger",
+            "mrkdwn_in": ["text"]
+        });
     }
     return notUpdated;
 };
@@ -224,17 +224,17 @@ const newlyCreated = async (kanbanBoardID, StatusIDs, middleTS, oldestTS, subQue
     var lastCheck;
     if (!middleTS){
         // show issues created in the last week
-        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate >= -1w ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)}));
+        createdRecentlyIssues = await JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate >= -1w ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
+            .catch(error => {throw new Error(`error getting backlogIssues 1: ${error}`)});
         lastCheck = "a week ago";
     }else{
         // query JIRA for issues created since the last check (i.e. since middleTS)
-        createdRecentlyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
-            .catch(error => {throw new Error(`error getting backlogIssues 2: ${error}`)}));
+        createdRecentlyIssues = await JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
+            .catch(error => {throw new Error(`error getting backlogIssues 2: ${error}`)});
         if (oldestTS){
             // remind the user about which newly created tickets were shown last time
-            createdPreviouslyIssues = await (JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${oldestTS}" and createdDate<"${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
-                .catch(error => {throw new Error(`error getting backlogIssues 3: ${error}`)}));
+            createdPreviouslyIssues = await JiraService.boardInfo(`${kanbanBoardID}/issue?jql=status in (${StatusIDs.join(',')}) and issueType!= Epic and createdDate>="${oldestTS}" and createdDate<"${middleTS}" ${subQuery} and resolution is EMPTY ORDER BY created DESC`)
+                .catch(error => {throw new Error(`error getting backlogIssues 3: ${error}`)});
         }
         lastCheck = Utils.timeFromNow(middleTS);
     }
@@ -283,12 +283,12 @@ const redColumnCheck = async (kanbanBoardID, boardConfig) => {
         }
         return [column, statusIDs];
     };
-    const checkColumn = (columnstatusIDs) => {
+    const checkColumn = async (columnstatusIDs) => {
         if (columnstatusIDs != null){
             column = columnstatusIDs[0];
             statusIDs = columnstatusIDs[1];
             const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
-            const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
+            const jiraResponse = await jiraBoardInfo(kanbanBoardID, jql);
             if (jiraResponse.issues.length > column.max){
                 return dangerSlackResponse(`:exclamation: The ${column.name} column is overflowing with the following issues:${issuesWithAssignee(jiraResponse)}`);
             }
@@ -308,7 +308,7 @@ const largeIssues = async (kanbanBoardID, boardConfig) => {
         columnNames.push(columns[i].name.toUpperCase());
     }
     if (columnNames.includes("PRIORITISED")){
-        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('PRIORITISED')].statuses));
+        var result = await returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('PRIORITISED')].statuses);
         if (result !== '') {
             largeProjects.push(dangerSlackResponse(`:exclamation: The prioritised column has the following tickets with story points > 3:${result}`));
         }
@@ -317,7 +317,7 @@ const largeIssues = async (kanbanBoardID, boardConfig) => {
     }
 
     if (columnNames.includes("SCOPED")){
-        var result = await (returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('SCOPED')].statuses));
+        var result = await returnLargeIssues(kanbanBoardID, columns[columnNames.indexOf('SCOPED')].statuses);
         if (result !== '') {
             largeProjects.push(dangerSlackResponse(`:exclamation: The scoped column has the following tickets with story points > 3:${result}`));
         }
@@ -331,7 +331,7 @@ const largeIssues = async (kanbanBoardID, boardConfig) => {
 const returnLargeIssues = async (kanbanBoardID, statuses) => {
     const statusIDs = fp.map('id')(statuses);
     const jql =`jql=status in (${statusIDs.join(',')}) and issueType!= Epic and resolution is EMPTY ORDER BY created DESC`;
-    const jiraResponse = await(jiraBoardInfo(kanbanBoardID, jql));
+    const jiraResponse = await jiraBoardInfo(kanbanBoardID, jql);
     const getLargeIssues = function (issue) {
         if (parseInt(issue[`fields`][process.env.JIRA_STORYPOINTS]) > 3){
             return issue;
@@ -353,7 +353,7 @@ const returnLargeIssues = async (kanbanBoardID, statuses) => {
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_SUMMARY (TIME_AGO)'
 const returnIssues = (JiraResponse) => {
     var result = '';
-    const numOfIssues = JiraResponse.total;
+    const numOfIssues = Math.min(50, JiraResponse.maxResults, JiraResponse.total);
     if (numOfIssues > 0){
         for (i = 0; i < numOfIssues; i++){
             var titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
@@ -367,7 +367,7 @@ const returnIssues = (JiraResponse) => {
 // return a list of new-line ended JIRA ticket information in the form 'JIRA_KEY - JIRA_ASSIGNEE - JIRA_SUMMARY (TIME_AGO)'
 const issuesWithAssignee = (JiraResponse) => {
     var result = '';
-    const numOfIssues = JiraResponse.total;
+    const numOfIssues = Math.min(50, JiraResponse.maxResults, JiraResponse.total);
     for (i = 0; i < numOfIssues; i++){
         const titles = `*${JiraService.HyperlinkJiraIssueID(JiraResponse['issues'][i]['key'])}* - *${JiraResponse['issues'][i]['fields']['summary']}*`;
         const assignee = `- *${JiraResponse['issues'][i][`fields`]['assignee']['displayName']}*`;
@@ -378,8 +378,8 @@ const issuesWithAssignee = (JiraResponse) => {
 };
 
 const jiraBoardInfo = async (kanbanBoardID, jql) => {
-    const jiraResponse = await(JiraService.boardInfo(`${kanbanBoardID}/issue?${jql}`)
-        .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) }));  
+    const jiraResponse = await JiraService.boardInfo(`${kanbanBoardID}/issue?${jql}`)
+        .catch(error => { throw new Error(`error getting returnLargeIssues: ${error}`) });  
     return jiraResponse;    
 };
 
