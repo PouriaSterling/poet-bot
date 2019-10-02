@@ -6,7 +6,7 @@ const config = {
   }
 };
 
-const jenkinsUrl = "https://jenkins.staging.agiledigital.co/";
+const jenkinsUrl = process.env.JENKINS_URL;
 const jobPath = "job/Sandbox/job/post-stage-test";
 
 /**
@@ -14,7 +14,7 @@ const jobPath = "job/Sandbox/job/post-stage-test";
  */
 module.exports.isUnlocked = () => {
   return axios
-    .get(`${jenkinsUrl}${jobPath}/api/json?pretty=true`, config)
+    .get(`${jenkinsUrl}/${jobPath}/api/json?pretty=true`, config)
     .then(function(response) {
       return response.data.buildable;
     })
@@ -29,7 +29,7 @@ module.exports.isUnlocked = () => {
  */
 module.exports.unlock = () => {
   return axios
-    .post(`${jenkinsUrl}${jobPath}/enable`, null, config)
+    .post(`${jenkinsUrl}/${jobPath}/enable`, null, config)
     .then(function(response) {
       return "OK";
     })
@@ -44,7 +44,7 @@ module.exports.unlock = () => {
  */
 module.exports.lock = () => {
   return axios
-    .post(`${jenkinsUrl}${jobPath}/disable`, null, config)
+    .post(`${jenkinsUrl}/${jobPath}/disable`, null, config)
     .then(function(response) {
       return "OK";
     })
