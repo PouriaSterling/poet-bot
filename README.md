@@ -40,6 +40,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
       jenkins:
         authorisationHeader: "<Your Dev Jenkins auth header>
         url: "<Your Dev Jenkins Base URL>"
+        deployJobPath: "<Your Dev Jenkins deploy job path>"
 
 	prod:
 	  slack:
@@ -59,6 +60,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
       jenkins:
         authorisationHeader: "<Your Production Jenkins auth header>
         url: "<Your Production Jenkins Base URL>"
+        deployJobPath: "<Your Production Jenkins deploy job path>"
 	```
 
   Notes:
@@ -66,6 +68,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
   * Leave your 'botId' fields empty for now, we will configure them after you've created your bot.
   * storypointsfieldID is the custom ID for your storypoints field. i.e. customfield_10054
   * The Jenkins authorisationHeader is in the form of `Basic <credentials>`, where credentials is the base64 encoding of a Jenkins username and password (or API token) joined by a single colon `:`.
+  * The Jenkins deploy job path can be found by navigating to your deployment job on Jenkins and extracting all parts of your URL that doesn't contain your Jenkins base URL (avoiding the leading slash). e.g. <Base Jenkins URL>path/to/your/deployment
   * Avoid trailing slashes `/` at the end of URLs
   * Do not commit this file. It is already Git ignored.
 
