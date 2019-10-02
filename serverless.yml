@@ -14,6 +14,7 @@ provider:
   runtime: nodejs8.10
   environment:
     STAGE: ${self:provider.stage}
+    TOPIC_ARN: !Ref PoetTopic
     CLIENT_ID: ${file(local.yml):${self:provider.stage}.slack.clientId}
     CLIENT_SECRET: ${file(local.yml):${self:provider.stage}.slack.clientSecret}
     SLACK_BOT_ID: ${file(local.yml):${self:provider.stage}.slack.botId}
@@ -24,6 +25,7 @@ provider:
     JIRA_PASSWORD: ${file(local.yml):${self:provider.stage}.jira.password}
     JIRA_URL: ${file(local.yml):${self:provider.stage}.jira.url}
     JIRA_STORYPOINTS: ${file(local.yml):${self:provider.stage}.jira.storypointsfieldID}
+    JENKINS_AUTHORISATION_HEADER: ${file(local.yml):${self:provider.stage}.jenkins.authorisationHeader}
     JIRA_ISSUE_ENDPOINT: "/rest/api/latest/issue/"
     JIRA_SEARCH_ENDPOINT: "/rest/api/latest/search/"
     JIRA_PROJECT_ENDPOINT: "/rest/api/latest/project/"
@@ -36,7 +38,7 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - lambda:InvokeFunction
+        - SNS:Publish
       Resource:
         - arn:aws:dynamodb:${self:provider.region}:*:*
         - "*"
@@ -56,7 +58,14 @@ functions:
       - http: POST receptionist
   event:
     handler: src/handler.event
-
+    timeout: 20
+    events:
+      - snsSqs:
+            name: PoetEvent
+            topicArn: !Ref PoetTopic
+            batchSize: 1 # Optional - default value is 10
+            maxRetryCount: 2 # Optional - default value is 5
+            
 resources:
   Resources:
     accessTokenTable:
@@ -85,6 +94,11 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    PoetTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: PoetTopic
 
 plugins:
   - serverless-offline
+  - "@agiledigital/serverless-sns-sqs-lambda"

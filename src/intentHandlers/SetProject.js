@@ -12,10 +12,10 @@ module.exports.process = async (event, token, entities) => {
     }
 
     // Call JIRA to make sure projectKey is a valid JIRA project
-    await (JiraService.projectInfo(projectKey)
-        .catch(error => {throw new Error(`Error *Setting Project*:\n${error.message}`)}));
+    await JiraService.projectInfo(projectKey)
+        .catch(error => {throw new Error(`Error *Setting Project*:\n${error.message}`)});
 
-    const ContextResponse = await (DBService.retrieveChannelContext(event.channel)
+    const ContextResponse = await DBService.retrieveChannelContext(event.channel
         .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
 
     // check if a project key has already been set for the channel
@@ -48,7 +48,7 @@ module.exports.process = async (event, token, entities) => {
         }
         SlackService.postMessage(event.channel, text, attachments, token);
     }else{
-        await (setProjectKey(projectKey, event.channel, token));
+        await setProjectKey(projectKey, event.channel, token);
     }
 };
 
@@ -57,7 +57,7 @@ module.exports.interactiveCallback = async (event, token) => {
     console.log(`SetProject interactiveCallback: ${JSON.stringify(event)}`);
     switch (event.actions[0].value){
         case 'yes':
-            await (setProjectKey(event.actions[0].name, event.channel.id, token, event.message_ts));
+            await setProjectKey(event.actions[0].name, event.channel.id, token, event.message_ts);
 //            SlackService.updateMessage(event.channel.id, `You have chosen ${event.actions[0].value}`, [{}], token, event.message_ts);
             break;
         case 'no':
@@ -69,11 +69,11 @@ module.exports.interactiveCallback = async (event, token) => {
 };
 
 
-const setProjectKey = (projectKey, channel, token, timestamp) => {
+const setProjectKey = async (projectKey, channel, token, timestamp) => {
     // set the project key for the channel
     console.log("Storing: " + projectKey);
-    await (DBService.updateChannelContext(channel, { "projectKey" : projectKey })
-        .catch(error => {throw new Error(`Failed to store project key for channel context: ${error}`)}));
+    await DBService.updateChannelContext(channel, { "projectKey" : projectKey })
+        .catch(error => {throw new Error(`Failed to store project key for channel context: ${error}`)});
 
     // construct the response to be sent to Slack
     const text = `Successfully set the JIRA project for this channel to ${projectKey}`;
