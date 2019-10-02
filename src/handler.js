@@ -154,7 +154,7 @@ const handleIntent = async (response, event, token) => {
     // hand off execution to intended handler and handle missing entity errors
     if (intent in IntentHandlers){
         try{
-           return IntentHandlers[intent].process(event, token, response.entities);
+           await IntentHandlers[intent].process(event, token, response.entities);
         }catch(error){
             console.log("handleIntent: " + error + error.stack);
             return SlackService.postError(error.message, event.channel, token);
@@ -169,7 +169,7 @@ const handleInteractiveCallbacks = async (event, token) => {
     // hand off execution to intended handler
     if (event.callback_id in IntentHandlers){
         try{
-            return IntentHandlers[event.callback_id].interactiveCallback(event, token);
+            await IntentHandlers[event.callback_id].interactiveCallback(event, token);
         }catch(error){
             console.log("handleInteractiveCallbacks: " + error + error.stack);
             return SlackService.postError(error.message, event.channel.id, token);

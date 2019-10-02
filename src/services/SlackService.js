@@ -2,41 +2,24 @@ const { WebClient } = require("@slack/web-api");
 const toTitleCase = require("titlecase");
 
 // post a message to Slack
-module.exports.postMessage = (channel, text, attachments, token) => {
+module.exports.postMessage = async (channel, text, attachments, token) => {
   const web = new WebClient(token);
-  web.chat
-    .postMessage({
-      channel: channel,
-      text: text,
-      attachments: JSON.stringify(attachments)
-    })
-    .then(res =>
-      console.log(
-        `Successfully sent message ${result.ts} to channel ${channel}`
-      )
-    )
-    .catch(err => console.log(`Error posting Slack message: ${err}`));
-  // console.log({
-  //     channel,
-  //     text,
-  //     attachments: JSON.stringify(attachments)
-  // })
-  // try {
-  //     const result = await web.chat.postMessage({
-  //         channel: channel,
-  //         text: text,
-  //         attachments: JSON.stringify(attachments)
-  //     });
+  try {
+      const result = await web.chat.postMessage({
+          channel: channel,
+          text: text,
+          attachments: JSON.stringify(attachments)
+      });
 
-  //     console.log(`Successfully sent message ${result.ts} to channel ${channel}`);
-  // } catch(error) {
-  //     console.log(`Error posting Slack message: ${error}`);
-  // }
+      console.log(`Successfully sent message ${result.ts} to channel ${channel}`);
+  } catch(error) {
+      console.log(`Error posting Slack message: ${error}`);
+  }
 };
 
 // post an error message to Slack. Function provides consistent error reporting
 module.exports.postError = (errorMessage, channel, token) => {
-  module.exports.postMessage(
+  return module.exports.postMessage(
     channel,
     "Whoops :cry:",
     [

@@ -13,8 +13,8 @@ module.exports.process = async (event, token, entities) => {
 
     // search JIRA for issues with the specified status
     const jql = "status='" + status + "' ORDER BY updated DESC";
-    const jiraResponse = await (JiraService.assigneeInfo(jql)
-        .catch(error => {throw new Error(`Error fetching *Issues for Status* of *${status}* from JIRA:\n${error.message}`)}));
+    const jiraResponse = await JiraService.assigneeInfo(jql)
+        .catch(error => {throw new Error(`Error fetching *Issues for Status* of *${status}* from JIRA:\n${error.message}`)});
 
     const numOfIssues = jiraResponse['total'];
     const limitResponsesTo = 10;
@@ -49,5 +49,5 @@ module.exports.process = async (event, token, entities) => {
         text += `no issues with status *${status.toUpperCase()}*`;
     }
 
-    SlackService.postMessage(event.channel, text, attachments, token);
+    return SlackService.postMessage(event.channel, text, attachments, token);
 };

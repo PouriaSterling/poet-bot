@@ -14,7 +14,7 @@ module.exports.process = async (event, token) => {
     }
   ];
 
-  SlackService.postMessage(
+  return SlackService.postMessage(
     event.channel,
     "job is now " + result,
     attachments,

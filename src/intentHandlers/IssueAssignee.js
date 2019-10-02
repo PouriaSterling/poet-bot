@@ -8,8 +8,8 @@ module.exports.process = async (event, token, entities) => {
     if (entities.length != 0){
         issueID = entities[0].entity;
     }else{
-        issueID = await (ContextService.fetchContextIssue(event.channel, token)
-            .catch(error => {throw new Error("Error fetching context issue for *Issue Assignee*:\n" + error.message)}));
+        issueID = await ContextService.fetchContextIssue(event.channel, token)
+            .catch(error => {throw new Error("Error fetching context issue for *Issue Assignee*:\n" + error.message)});
         if (issueID === "none" || issueID === "tooOld"){
             throw new Error("Error fetching *Issue Assignee* because Luis couldn't find an entity and no issue has been recently discussed");
         }
@@ -17,8 +17,8 @@ module.exports.process = async (event, token, entities) => {
     issueID = issueID.replace(/ /g, '').toUpperCase();
 
     // Call JIRA to get information for the issueID
-    const jiraResponse = await (JiraService.issueInfo(issueID)
-        .catch(error => {throw new Error(`Error fetching *Issue Assignee* of *${issueID}* from JIRA:\n${error.message}`)}));
+    const jiraResponse = await JiraService.issueInfo(issueID)
+        .catch(error => {throw new Error(`Error fetching *Issue Assignee* of *${issueID}* from JIRA:\n${error.message}`)});
 
     const assignee = jiraResponse['fields']['assignee']['displayName'];
 
@@ -30,5 +30,5 @@ module.exports.process = async (event, token, entities) => {
             "color": "good"
         }
     ];
-    SlackService.postMessage(event.channel, text, attachments, token);
+    return SlackService.postMessage(event.channel, text, attachments, token);
 };

@@ -15,8 +15,8 @@ module.exports.process = async (event, token, entities) => {
     await JiraService.projectInfo(projectKey)
         .catch(error => {throw new Error(`Error *Setting Project*:\n${error.message}`)});
 
-    const ContextResponse = await DBService.retrieveChannelContext(event.channel
-        .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)}));
+    const ContextResponse = await DBService.retrieveChannelContext(event.channel)
+        .catch(error => {throw new Error(`Failed to fetch project key for channel context: ${error}`)});
 
     // check if a project key has already been set for the channel
     if (ContextResponse && ContextResponse.projectKey){
@@ -46,7 +46,7 @@ module.exports.process = async (event, token, entities) => {
         if (ContextResponse.projectKey == projectKey){
             attachments = [{}];
         }
-        SlackService.postMessage(event.channel, text, attachments, token);
+        return SlackService.postMessage(event.channel, text, attachments, token);
     }else{
         await setProjectKey(projectKey, event.channel, token);
     }
@@ -61,7 +61,7 @@ module.exports.interactiveCallback = async (event, token) => {
 //            SlackService.updateMessage(event.channel.id, `You have chosen ${event.actions[0].value}`, [{}], token, event.message_ts);
             break;
         case 'no':
-            SlackService.updateMessage(event.channel.id, `You've chosen to not update the channel project`, [{}], token, event.message_ts);
+            return SlackService.updateMessage(event.channel.id, `You've chosen to not update the channel project`, [{}], token, event.message_ts);
             break;
         default:
             throw new Error(`Internal error: '${event.actions[0].value}' is not a correct option for SetProject interactiveCallback`);
@@ -85,8 +85,8 @@ const setProjectKey = async (projectKey, channel, token, timestamp) => {
         }
     ];
     if (timestamp){
-        SlackService.updateMessage(channel, text, attachments, token, timestamp);
+        return SlackService.updateMessage(channel, text, attachments, token, timestamp);
     }else{
-        SlackService.postMessage(channel, text, attachments, token);
+        return SlackService.postMessage(channel, text, attachments, token);
     }
 };

@@ -82,8 +82,12 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
     * Set 'Always Show My Bot as Online' to on
   * Select **Event Subscriptions** and:
     * Switch 'Enable Events' to on
-    * in the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
+    * In the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
     * Once verified, under 'Subscribe to Bot Events' select 'Add Bot User Event' and choose 'message.channels'
+    * Save changes
+  * Select **Interactive Components**
+    * Toggle *Interactivity* to on
+    * In the 'Request URL' box paste the `receptionist` endpoint
     * Save changes
 
 * Navigate to your `install` endpoint using your browser and choose 'Add to Slack'

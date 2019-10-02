@@ -28,5 +28,5 @@ module.exports.process = async (event, token) => {
     }
   ];
 
-  SlackService.postMessage(event.channel, text, attachments, token);
+  return SlackService.postMessage(event.channel, text, attachments, token);
 };
