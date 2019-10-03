@@ -57,7 +57,7 @@ module.exports.authorized = (event, context, callback) => {
 // receptionist Lambda responds to url_verification requests
 // or passes request onto event Lambda and immediately returns
 // a HTTP 200 response.
-module.exports.receptionist = (event, context, callback) => {
+module.exports.receptionist = async (event, context, callback) => {
     // interactive Slack messages are URL encoded so they need to be decoded in the event body before parsing
     event.body = event.body.startsWith("payload") ? decodeURIComponent(event.body.substring(8)) : event.body;
     const jsonBody = JSON.parse(event.body);
@@ -90,12 +90,16 @@ module.exports.receptionist = (event, context, callback) => {
     } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) ) && !timeoutRetry){
         // publish the event to the SNS topic for the event lambda to pickup
         console.log('Publishing event to SNS queue. ARN: ', TOPIC_ARN);
-        sns.publish({
-            Message: JSON.stringify(event),
-            TopicArn: TOPIC_ARN
-        }).promise()
-            .then(event => console.log(`successfully published: [${event}]`))
-            .catch(err => console.log(`Failed to publish: [${err}]`))
+        try {
+            await sns.publish({
+                Message: JSON.stringify(event),
+                TopicArn: TOPIC_ARN
+            }).promise()
+
+            console.log(`successfully published`)
+        } catch (err) {    
+            console.log(`Failed to publish: [${err}]`)
+        }
     } else if (!timeoutRetry) {
         // ignore bot messages
         if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
