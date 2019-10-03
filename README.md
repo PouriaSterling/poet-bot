@@ -36,8 +36,13 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         password: "<Your Dev JIRA Password>"
         url: "<Your Dev JIRA Base URL>"
         storypointsfieldID: "<Your Dev JIRA storypoints field name>"
+      
+      jenkins:
+        authorisationHeader: "<Your Dev Jenkins auth header>
+        url: "<Your Dev Jenkins Base URL>"
+        deployJobPath: "<Your Dev Jenkins deploy job path>"
 
-	production:
+	prod:
 	  slack:
 	    clientId: "<Your Production Slack App Client ID>"
 	    clientSecret: <Your Production Slack App Client Secret>
@@ -51,12 +56,20 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
         password: "<Your Production JIRA Password>"
         url: "<Your Production JIRA Base URL>"
         storypointsfieldID: "<Your Production JIRA storypoints field name>"
+        
+      jenkins:
+        authorisationHeader: "<Your Production Jenkins auth header>
+        url: "<Your Production Jenkins Base URL>"
+        deployJobPath: "<Your Production Jenkins deploy job path>"
 	```
 
   Notes:
   * 'clientid' must be quoted otherwise it is interpreted as a number.
   * Leave your 'botId' fields empty for now, we will configure them after you've created your bot.
   * storypointsfieldID is the custom ID for your storypoints field. i.e. customfield_10054
+  * The Jenkins authorisationHeader is in the form of `Basic <credentials>`, where credentials is the base64 encoding of a Jenkins username and password (or API token) joined by a single colon `:`.
+  * The Jenkins deploy job path can be found by navigating to your deployment job on Jenkins and extracting all parts of your URL that doesn't contain your Jenkins base URL (avoiding the leading slash). e.g. <Base Jenkins URL>path/to/your/deployment
+  * Avoid trailing slashes `/` at the end of URLs
   * Do not commit this file. It is already Git ignored.
 
 * Deploy the server to AWS Lambda `serverless deploy` or a shorter form `sls deploy`
@@ -71,13 +84,23 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
 	```
 
 * Go to your [Slack app](https://api.slack.com/apps) and:
-  * Select 'OAuth & Permissions' and in the 'Redirect URL(s)' box paste the `authorized` endpoint
-  * Select 'Bot Users' and then 'Add a Bot User' to create a bot for your application
+  * Select **OAuth & Permissions** and 
+    * In the 'Redirect URL(s)' box paste the `authorized` endpoint
+    * Under **Scopes**, select the following permission scopes:
+      * channels:history
+      * chat:write:bot
+      * users:read
+      * users.profile:read
+  * Select **Bot Users** and then 'Add a Bot User' to create a bot for your application
     * Set 'Always Show My Bot as Online' to on
-  * Select 'Event Subscriptions' and:
+  * Select **Event Subscriptions** and:
     * Switch 'Enable Events' to on
-    * in the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
+    * In the 'Request URL' box paste the `receptionist` endpoint and wait for it to verify
     * Once verified, under 'Subscribe to Bot Events' select 'Add Bot User Event' and choose 'message.channels'
+    * Save changes
+  * Select **Interactive Components**
+    * Toggle *Interactivity* to on
+    * In the 'Request URL' box paste the `receptionist` endpoint
     * Save changes
 
 * Navigate to your `install` endpoint using your browser and choose 'Add to Slack'

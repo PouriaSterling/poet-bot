@@ -10,19 +10,24 @@ package:
 provider:
   name: aws
   region: ap-southeast-2
-  stage: dev
-  runtime: nodejs6.10
+  stage: ${opt:stage, 'dev'}
+  runtime: nodejs8.10
   environment:
-    CLIENT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientId}
-    CLIENT_SECRET: ${file(local.yml):${opt:stage, self:provider.stage}.slack.clientSecret}
-    SLACK_BOT_ID: ${file(local.yml):${opt:stage, self:provider.stage}.slack.botId}
-    LUIS_URL: ${file(local.yml):${opt:stage, self:provider.stage}.luis.url}
+    STAGE: ${self:provider.stage}
+    TOPIC_ARN: !Ref PoetTopic
+    CLIENT_ID: ${file(local.yml):${self:provider.stage}.slack.clientId}
+    CLIENT_SECRET: ${file(local.yml):${self:provider.stage}.slack.clientSecret}
+    SLACK_BOT_ID: ${file(local.yml):${self:provider.stage}.slack.botId}
+    LUIS_URL: ${file(local.yml):${self:provider.stage}.luis.url}
     ACCESS_TOKEN_TABLE_NAME: ${self:resources.Resources.accessTokenTable.Properties.TableName}
     CHANNEL_CONTEXT_TABLE_NAME: ${self:resources.Resources.jiraIssueIDTable.Properties.TableName}
-    JIRA_NAME: ${file(local.yml):${opt:stage, self:provider.stage}.jira.name}
-    JIRA_PASSWORD: ${file(local.yml):${opt:stage, self:provider.stage}.jira.password}
-    JIRA_URL: ${file(local.yml):${opt:stage, self:provider.stage}.jira.url}
-    JIRA_STORYPOINTS: ${file(local.yml):${opt:stage, self:provider.stage}.jira.storypointsfieldID}
+    JIRA_NAME: ${file(local.yml):${self:provider.stage}.jira.name}
+    JIRA_PASSWORD: ${file(local.yml):${self:provider.stage}.jira.password}
+    JIRA_URL: ${file(local.yml):${self:provider.stage}.jira.url}
+    JIRA_STORYPOINTS: ${file(local.yml):${self:provider.stage}.jira.storypointsfieldID}
+    JENKINS_AUTHORISATION_HEADER: ${file(local.yml):${self:provider.stage}.jenkins.authorisationHeader}
+    JENKINS_URL: ${file(local.yml):${self:provider.stage}.jenkins.url}
+    JENKINS_DEPLOY_JOB_PATH: ${file(local.yml):${self:provider.stage}.jenkins.deployJobPath}
     JIRA_ISSUE_ENDPOINT: "/rest/api/latest/issue/"
     JIRA_SEARCH_ENDPOINT: "/rest/api/latest/search/"
     JIRA_PROJECT_ENDPOINT: "/rest/api/latest/project/"
@@ -35,7 +40,7 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - lambda:InvokeFunction
+        - SNS:Publish
       Resource:
         - arn:aws:dynamodb:${self:provider.region}:*:*
         - "*"
@@ -55,13 +60,20 @@ functions:
       - http: POST receptionist
   event:
     handler: src/handler.event
-
+    timeout: 20
+    events:
+      - snsSqs:
+            name: PoetEvent
+            topicArn: !Ref PoetTopic
+            batchSize: 1 # Optional - default value is 10
+            maxRetryCount: 2 # Optional - default value is 5
+            
 resources:
   Resources:
     accessTokenTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-${opt:stage, self:provider.stage}-accessTokenTable
+        TableName: ${self:service}-${self:provider.stage}-accessTokenTable
         AttributeDefinitions:
           - AttributeName: teamId
             AttributeType: S
@@ -74,7 +86,7 @@ resources:
     jiraIssueIDTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:service}-${opt:stage, self:provider.stage}-channelContextTable
+        TableName: ${self:service}-${self:provider.stage}-channelContextTable
         AttributeDefinitions:
           - AttributeName: channel
             AttributeType: S
@@ -84,6 +96,11 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    PoetTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: PoetTopic
 
 plugins:
   - serverless-offline
+  - "@agiledigital/serverless-sns-sqs-lambda"
