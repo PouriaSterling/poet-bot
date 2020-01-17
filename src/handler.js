@@ -1,13 +1,13 @@
-const ContextService = require('./services/ContextService.js');
-const SlackService = require('./services/SlackService.js');
-const LuisService = require('./services/LuisService.js');
-const DBService = require('./services/DBService.js');
-const Utils = require('./services/Utils.js');
-const requireDir = require('require-dir');
-const IntentHandlers = requireDir('./intentHandlers');
-const Greetings = require('./intentHandlers/Greeting')
-const thrw = require('throw');
-const https = require('https');
+const ContextService = require("./services/ContextService.js");
+const SlackService = require("./services/SlackService.js");
+const LuisService = require("./services/LuisService.js");
+const DBService = require("./services/DBService.js");
+const Utils = require("./services/Utils.js");
+const requireDir = require("require-dir");
+const IntentHandlers = requireDir("./intentHandlers");
+const Greetings = require("./intentHandlers/Greeting");
+const thrw = require("throw");
+const https = require("https");
 const AWS = require("aws-sdk");
 const lambda = new AWS.Lambda({
   region: "ap-southeast-2",
@@ -17,168 +17,171 @@ const lambda = new AWS.Lambda({
 const TOPIC_ARN = process.env.TOPIC_ARN;
 
 const client = {
-	id: process.env.CLIENT_ID,
-	secret: process.env.CLIENT_SECRET,
-	botID: process.env.SLACK_BOT_ID
+  id: process.env.CLIENT_ID,
+  secret: process.env.CLIENT_SECRET,
+  botID: process.env.SLACK_BOT_ID
 };
 
 module.exports.install = (event, context, callback) => {
-	callback(null, {
-		statusCode: 200,
-		headers: {
-			'Content-Type': 'text/html'
-		},
-		body: Utils.installHTML(client.id)
-	});
+  callback(null, {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html'
+    },
+    body: Utils.installHTML(client.id)
+  });
 };
 
 module.exports.authorized = (event, context, callback) => {
-	const code = event.queryStringParameters.code;
+  const code = event.queryStringParameters.code;
 
-	https.get(`https://slack.com/api/oauth.access?client_id=${client.id}&client_secret=${client.secret}&code=${code}`, response => {
-		var body = '';
-		response.on('data', chunk => body += chunk);
-		response.on('end', () => {
-			const jsonBody = JSON.parse(body);
-			DBService.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token)
-				.catch(error => console.log(error));
-		});
-	});
+  https.get(`https://slack.com/api/oauth.access?client_id=${client.id}&client_secret=${client.secret}&code=${code}`, response => {
+    var body = '';
+    response.on('data', chunk => body += chunk);
+    response.on('end', () => {
+        const jsonBody = JSON.parse(body);
+      DBService.storeAccessToken(jsonBody.team_id, jsonBody.bot.bot_access_token)
+        ).catch(error => console.log(error));
+      });
+  });
 
-	callback(null, {
-		statusCode: 200,
-		headers: {
-			'Content-Type': 'text/html'
-		},
-		body: Utils.authorizedHTML()
-	});
+  callback(null, {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html'
+    },
+    body: Utils.authorizedHTML()
+  });
 };
 
 // receptionist Lambda responds to url_verification requests
 // or passes request onto event Lambda and immediately returns
 // a HTTP 200 response.
 module.exports.receptionist = async (event, context, callback) => {
-    // interactive Slack messages are URL encoded so they need to be decoded in the event body before parsing
-    event.body = event.body.startsWith("payload") ? decodeURIComponent(event.body.substring(8)) : event.body;
-    const jsonBody = JSON.parse(event.body);
-    const sns = new AWS.SNS({ region: "ap-southeast-2" });
+  // interactive Slack messages are URL encoded so they need to be decoded in the event body before parsing
+  event.body = event.body.startsWith("payload") ? decodeURIComponent(event.body.substring(8)) : event.body;
+  const jsonBody = JSON.parse(event.body);
+  const sns = new AWS.SNS({ region: "ap-southeast-2" });
 
-    // print debugging information to AWS Cloudwatch
-    if (jsonBody.type === "interactive_message"){
-        console.log("All: " + JSON.stringify(jsonBody));
-    }else if (jsonBody.type !== 'url_verification'){
-        console.log("Event: " + JSON.stringify(jsonBody.event));
-    }
+  // print debugging information to AWS Cloudwatch
+  if (jsonBody.type === "interactive_message"){
+    console.log("All: " + JSON.stringify(jsonBody));
+  }else if (jsonBody.type !== 'url_verification'){
+    console.log("Event: " + JSON.stringify(jsonBody.event));
+  }
 
-    // we don't want to respond to Slack HTTP timeout retries
-    var timeoutRetry = false;
-    if (event.headers['X-Slack-Retry-Reason']
-        && event.headers['X-Slack-Retry-Reason'] === 'http_timeout'){
-        console.log("Slack timed out and sent a retry");
-        timeoutRetry = true;
-    }
+  // we don't want to respond to Slack HTTP timeout retries
+  var timeoutRetry = false;
+  if (event.headers['X-Slack-Retry-Reason']
+    event.headers["X-Slack-Retry-Reason"] === "http_timeout"
+  ) {
+    console.log("Slack timed out and sent a retry");
+    timeoutRetry = true;
+  }
 
-    const response = {
-        statusCode: 200
+  const response = {
+    statusCode: 200
+  };
+  if (jsonBody.type === 'url_verification'){
+    response.headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
     };
-    if (jsonBody.type === 'url_verification'){
-        response.headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        };
-        response.body = jsonBody.challenge;
+    response.body = jsonBody.challenge;
     // respond to bot mentions and interactive message callbacks from Slack. Ignore http_timeout retries
-    } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) ) && !timeoutRetry){
-        // publish the event to the SNS topic for the event lambda to pickup
-        console.log('Publishing event to SNS queue. ARN: ', TOPIC_ARN);
-        try {
-            await sns.publish({
-                Message: JSON.stringify(event),
-                TopicArn: TOPIC_ARN
-            }).promise()
+  } else if (( jsonBody.type === "interactive_message" || jsonBody.event.text.includes(`@${client.botID}`) ) && !timeoutRetry){
+    // publish the event to the SNS topic for the event lambda to pickup
+    console.log('Publishing event to SNS queue. ARN: ', TOPIC_ARN);
+    try {
+      await sns.publish({
+          Message: JSON.stringify(event),
+        TopicArn: TOPIC_ARN
+      }).promise()
 
-            console.log(`successfully published`)
-        } catch (err) {    
-            console.log(`Failed to publish: [${err}]`)
-        }
-    } else if (!timeoutRetry) {
-        // ignore bot messages
-        if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
-            ContextService.maintainContextIssueID(jsonBody.event.text, jsonBody.event.channel);
-        }
+      console.log(`successfully published`)
+    } catch (err) {
+      console.log(`Failed to publish: [${err}]`)
     }
+  } else if (!timeoutRetry) {
+    // ignore bot messages
+    if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message'){
+      ContextService.maintainContextIssueID(jsonBody.event.text, jsonBody.event.channel);
+    }
+  }
+  }
 
-    callback(null, response);
+  callback(null, response);
 };
 
 // event Lambda calls Luis and palms execution off to intended intent handler
 module.exports.event = async (event, context, callback) => {
-    console.log('Number of records: ', event.Records.length);
-    const jsonMessage = JSON.parse(event.Records[0].body).Message;
-    const jsonBody = JSON.parse(JSON.parse(jsonMessage).body);
-    console.log('Record: ', jsonBody);
+  console.log('Number of records: ', event.Records.length);
+  const jsonMessage = JSON.parse(event.Records[0].body).Message;
+  const jsonBody = JSON.parse(JSON.parse(jsonMessage).body);
+  console.log('Record: ', jsonBody);
 
-    if (jsonBody.type === 'event_callback'){
-        // retrieve the bot access token from the DynamoDB
-        const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team_id)
-        .catch(error => console.log(error)));
-    	if (jsonBody.event.type === 'message'){
-            // ignore ourselves
-            if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
-                // call Luis
-                const response = await (LuisService.interpretQuery(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
-                .catch(error => {
-                    console.log("LuisCatchErr: " + error);
-                }));
-                
-               await handleIntent(response, jsonBody.event, botAccessToken);
+  if (jsonBody.type === 'event_callback'){
+    // retrieve the bot access token from the DynamoDB
+    const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team_id)
+      .catch(error => console.log(error)));
+    if (jsonBody.event.type === "message") {
+      // ignore ourselves
+      if (!jsonBody.event.subtype || jsonBody.event.subtype !== 'bot_message') {
+        // call Luis
+        const response = await (LuisService.interpretQuery(jsonBody.event.text.replace(`<@${client.botID}>`, ''))
+        ).catch(error => {
+          console.log("LuisCatchErr: " + error);
+          }));
 
-               console.log('Successfully handled intent.');
-            }
-    	}
-	}else if (jsonBody.type === 'interactive_message'){
-	    // retrieve the bot access token from the DynamoDB
-	    const botAccessToken = await (DBService.retrieveAccessToken(jsonBody.team.id)
-            .catch(error => console.log(error)));
-        await handleInteractiveCallbacks(jsonBody, botAccessToken);
+        await handleIntent(response, jsonBody.event, botAccessToken);
+
+        console.log('Successfully handled intent.');
+      }
     }
+  }else if (jsonBody.type === 'interactive_message'){
+    // retrieve the bot access token from the DynamoDB
+    const botAccessToken = await DBService.retrieveAccessToken(
+      jsonBody.team.id
+      .catch(error => console.log(error)));
+    await handleInteractiveCallbacks(jsonBody, botAccessToken);
+  }
 
-    callback(null, {statusCode: 200})    
+  callback(null, {statusCode: 200})
 };
 
 // report error or call the JIRA handler function based on Luis response
 const handleIntent = async (response, event, token) => {
-    console.log("LUIS: " + JSON.stringify(response));
-    // catch LUIS call errors
-    if (response.statusCode >= 300){
-        return SlackService.postError(`Luis Error: ${response.statusCode} - ${response.message}`, event.channel, token);
-    }
-    
-    const intent = response.topScoringIntent.intent;
+  console.log("LUIS: " + JSON.stringify(response));
+  // catch LUIS call errors
+  if (response.statusCode >= 300){
+    return SlackService.postError(`Luis Error: ${response.statusCode} - ${response.message}`, event.channel, token);
+  }
 
-    // hand off execution to intended handler and handle missing entity errors
-    if (intent in IntentHandlers){
-        try{
-           await IntentHandlers[intent].process(event, token, response.entities);
-        }catch(error){
-            console.log("handleIntent: " + error + error.stack);
-            return SlackService.postError(error.message, event.channel, token);
-        }
-    }else{
-        return SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer (into action)! :raised_hand_with_fingers_splayed: ", event.channel, token);
+  const intent = response.topScoringIntent.intent;
+
+  // hand off execution to intended handler and handle missing entity errors
+  if (intent in IntentHandlers){
+    try{
+      await IntentHandlers[intent].process(event, token, response.entities);
+    }catch(error){
+      console.log("handleIntent: " + error + error.stack);
+      return SlackService.postError(error.message, event.channel, token);
     }
+  }else{
+    return SlackService.postError("I understand you, but that feature hasn't been implemented yet! Go slap the developer (into action)! :raised_hand_with_fingers_splayed: ", event.channel, token);
+  }
 };
 
 const handleInteractiveCallbacks = async (event, token) => {
-    console.log(`interactive callback for ${event.callback_id}`);
-    // hand off execution to intended handler
-    if (event.callback_id in IntentHandlers){
-        try{
-            await IntentHandlers[event.callback_id].interactiveCallback(event, token);
-        }catch(error){
-            console.log("handleInteractiveCallbacks: " + error + error.stack);
-            return SlackService.postError(error.message, event.channel.id, token);
-        }
-    }else{
-        return SlackService.postError(`Interactive callback incorrectly configured. '${event.callback_id}' does not exist in 'IntentHandlers'`, event.channel.id, token);
+  console.log(`interactive callback for ${event.callback_id}`);
+  // hand off execution to intended handler
+  if (event.callback_id in IntentHandlers){
+    try{
+      await IntentHandlers[event.callback_id].interactiveCallback(event, token);
+    }catch(error){
+      console.log("handleInteractiveCallbacks: " + error + error.stack);
+      return SlackService.postError(error.message, event.channel.id, token);
     }
+  }else{
+    return SlackService.postError(`Interactive callback incorrectly configured. '${event.callback_id}' does not exist in 'IntentHandlers'`, event.channel.id, token);
+  }
 };
