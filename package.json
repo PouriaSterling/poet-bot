@@ -30,6 +30,7 @@
   },
   "scripts": {
     "sls": "serverless",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "build": "sls package"
   }
 }
