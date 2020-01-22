@@ -1,0 +1,24 @@
+env:
+  node: true
+  es6: true
+extends:
+  - 'eslint:recommended'
+  - 'plugin:sonarjs/recommended'
+  - 'plugin:prettier/recommended'
+plugins:
+  - 'sonarjs'
+  - 'prettier'
+parserOptions:
+  ecmaVersion: 2018
+rules: {
+  # Additional rules that are not part of `eslint:recommended`.
+  # See https://eslint.org/docs/rules/
+  "no-eval": "warn",
+  "no-implied-eval": "warn",
+  "no-await-in-loop": "warn",
+  "no-new-wrappers": "warn",
+  "no-trailing-spaces": "warn",
+  "indent": ["warn", 2, {"SwitchCase": 1}],
+  "no-multi-spaces": "warn",
+  "eqeqeq": "warn",
+}

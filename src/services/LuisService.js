@@ -1,12 +1,13 @@
-const axios = require('axios');
+const axios = require("axios");
 
-module.exports.interpretQuery = (question) => {
-    return axios.get(process.env.LUIS_URL + question)
+module.exports.interpretQuery = question => {
+  return axios
+    .get(process.env.LUIS_URL + question)
     .then(response => {
-        return response.data;
+      return response.data;
     })
     .catch(error => {
-        console.log(`LuisCallError: ${error.response.data}`);
-        return error.response.data;
+      console.log(`LuisCallError: ${error.response.data}`);
+      return error.response.data;
     });
 };

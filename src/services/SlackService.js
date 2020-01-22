@@ -5,15 +5,15 @@ const toTitleCase = require("titlecase");
 module.exports.postMessage = async (channel, text, attachments, token) => {
   const web = new WebClient(token);
   try {
-      const result = await web.chat.postMessage({
-          channel: channel,
-          text: text,
-          attachments: JSON.stringify(attachments)
-      });
+    const result = await web.chat.postMessage({
+      channel: channel,
+      text: text,
+      attachments: JSON.stringify(attachments)
+    });
 
-      console.log(`Successfully sent message ${result.ts} to channel ${channel}`);
-  } catch(error) {
-      console.log(`Error posting Slack message: ${error}`);
+    console.log(`Successfully sent message ${result.ts} to channel ${channel}`);
+  } catch (error) {
+    console.log(`Error posting Slack message: ${error}`);
   }
 };
 

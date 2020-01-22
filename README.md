@@ -12,7 +12,7 @@ Project Oriented Enlightenment Tool (Poet) is a serverless natural language proc
     cd poet-bot
     ```
 
-* run `npm install`
+* run `yarn install`
 * [Create an AWS account](https://aws.amazon.com/free/) if haven't got one already
 * [Install Serverless](https://serverless.com/framework/docs/providers/aws/guide/installation/) and [configure your AWS credentials](https://www.youtube.com/watch?v=mRkUnA3mEt4).
 * [Create a Luis app](https://www.luis.ai/home) for the bot
