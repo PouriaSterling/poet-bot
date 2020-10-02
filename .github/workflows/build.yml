@@ -24,6 +24,13 @@ jobs:
         with:
           node-version: '12'
 
+      # Create the required secrets and credentials file from "Secrets" stored in Github
+      - name: Create local.yml file
+        run: | 
+          cat > local.yml << EOF
+          ${{ secrets.ENV }}
+          EOF
+
       - name: Install
         run: yarn install --frozen-lockfile
 
