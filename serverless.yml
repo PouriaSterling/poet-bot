@@ -99,7 +99,7 @@ resources:
     PoetTopic:
       Type: AWS::SNS::Topic
       Properties:
-        TopicName: PoetTopic
+        TopicName: ${self:service}-${self:provider.stage}-topic
 
 plugins:
   - serverless-offline
