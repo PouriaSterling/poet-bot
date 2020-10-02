@@ -1,35 +1,30 @@
 name: Build Pull Request
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# Only run the build action when any pull request is created or updated
 on: [pull_request]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
     name: Build
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks-out the repository under $GITHUB_WORKSPACE, so the job can access it
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-cache-
 
       # Setup node environment
       - name: Use Node.js Version 12
         uses: actions/setup-node@v1
         with:
           node-version: '12'
-
-      # Create the required secrets and credentials file from "Secrets" stored in Github
-      - name: Create local.yml file
-        run: | 
-          cat > local.yml << EOF
-          ${{ secrets.ENV }}
-          EOF
 
       - name: Install
         run: yarn install --frozen-lockfile
