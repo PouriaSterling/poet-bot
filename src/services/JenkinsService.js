@@ -7,7 +7,7 @@ const config = {
 };
 
 const jenkinsUrl = process.env.JENKINS_URL;
-const jobPath = process.env.JENKINS_DEPLOY_JOB_PATH
+const jobPath = process.env.JENKINS_DEPLOY_JOB_PATH;
 
 /**
  * Check the state of the deploy job
